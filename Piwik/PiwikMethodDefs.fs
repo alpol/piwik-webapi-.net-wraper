@@ -120,16 +120,32 @@ and SEOMethod =
                 match this with
                 | GetRank(url) as t -> (methodCmdImpl t) + makeParam("url",url)
 and TransitionsMethod =
-    | GetTransitionsForPageTitle of SiteId * TimeSlice * string //(pageTitle, idSite, period, date, segment = '', limitBeforeGrouping = '') [ No example available ]
-    | GetTransitionsForPageUrl of SiteId * TimeSlice * string //(pageUrl, idSite, period, date, segment = '', limitBeforeGrouping = '') [ No example available ]
-    | GetTransitionsForAction  of SiteId * TimeSlice * string * string//(actionName, actionType, idSite, period, date, segment = '', limitBeforeGrouping = '', parts = 'all', returnNormalizedUrls = '') [ No example available ]
-    | GetTranslations// () [ Example in XML, Json, Tsv (Excel) ]
+    | GetTransitionsForPageTitle of SiteId * TimeSlice * string * SegmentType option * string option 
+    | GetTransitionsForPageUrl of SiteId * TimeSlice * string * SegmentType option * string option
+    | GetTransitionsForAction  of SiteId * TimeSlice * string * string * string option *  SegmentType option * string option * string option 
+    | GetTranslations
     interface ApiMethod with
         member this.Command =
                 match this with
-                | GetTransitionsForPageTitle(sid,ts,pt) as t -> (methodCmdImpl t) + ( makeParams [|sid:>ApiParameter; ts:>ApiParameter|]) + makeParam("pageTitle",pt)
-                | GetTransitionsForPageUrl(sid,ts,pu) as t -> (methodCmdImpl t) + ( makeParams [|sid:>ApiParameter; ts:>ApiParameter|]) + makeParam("pageUrl",pu)
-                | GetTransitionsForAction(sid,ts,an,at) as t -> (methodCmdImpl t) + ( makeParams [|sid:>ApiParameter; ts:>ApiParameter|]) + makeParam("actionName",an)+ makeParam("actionType",at)
+                | GetTransitionsForPageTitle(sid,ts,pt,segment ,limitBeforeGrouping) as t -> (methodCmdImpl t)
+                                                                                             + ( makeParams [|sid:>ApiParameter; ts:>ApiParameter|])
+                                                                                             + makeParam("pageTitle",pt)
+                                                                                             + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "") 
+                                                                                             + (if (limitBeforeGrouping.IsSome) then makeParam("limitBeforeGrouping",limitBeforeGrouping.Value) else "") 
+                | GetTransitionsForPageUrl(sid,ts,pu,segment ,limitBeforeGrouping) as t -> (methodCmdImpl t)
+                                                                                             + ( makeParams [|sid:>ApiParameter; ts:>ApiParameter|])
+                                                                                             + makeParam("pageUrl",pu)
+                                                                                             + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "") 
+                                                                                             + (if (limitBeforeGrouping.IsSome) then makeParam("limitBeforeGrouping",limitBeforeGrouping.Value) else "") 
+                | GetTransitionsForAction(sid,ts,an,at,parts,
+                                            segment ,limitBeforeGrouping
+                                            ,returnNormalizedUrls) as t -> (methodCmdImpl t)
+                                                                           + ( makeParams [|sid:>ApiParameter; ts:>ApiParameter|])
+                                                                           + makeParam("actionName",an)+ makeParam("actionType",at)
+                                                                           + (if (parts.IsSome) then makeParam("parts",parts.Value) else makeParam("parts","All") ) 
+                                                                           + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "") 
+                                                                           + (if (limitBeforeGrouping.IsSome) then makeParam("limitBeforeGrouping",limitBeforeGrouping.Value) else "")
+                                                                           + (if (returnNormalizedUrls.IsSome) then makeParam("returnNormalizedUrls",returnNormalizedUrls.Value) else "")  
                 | GetTranslations as t  -> methodCmdImpl t
 and PDFReportsMethod =
     | AddReport // (idSite, description, period, reportType, reportFormat, reports, parameters) [ No example available ]
