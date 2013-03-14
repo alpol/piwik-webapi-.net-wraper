@@ -5,11 +5,16 @@ open System
 
 let private makeParam2 p = (p:>ApiParameter).Command 
 let private makeParams p = p |> Seq.fold (fun s e -> s + (makeParam2 e) ) ""
-
 let private makeParam (n, v) = String.Format(@"&{1}={2}",  n, v) 
+let private makeParams2 p = p |> Seq.fold(fun s e -> s + (makeParam e))""
 let private methodCmdImpl t = (fst( Reflection.FSharpValue.GetUnionFields(t,t.GetType()))).Name |> fun s -> s.Substring(0,1).ToLower() + s.Substring(1)
 let private methodTypeCmdImpl o m s = String.Format("&{0}={1}", (o :> ApiParameter).Name, s + "." + (m :> ApiMethod).Command ) 
-
+let private makeLogins logins =
+    match logins with
+    | None -> ""
+    | Some(l)  when Seq.isEmpty(l) -> ""
+    | Some(l)  -> "userLogins=" + (l |> Seq.fold (fun a v -> a + v + ",") "").TrimEnd(',')
+                                                                                   
 type MethodType =
     |MultiSites of MultiSitesMethod
     |VisitsSummary of VisitsSummaryMethod
@@ -66,27 +71,48 @@ type MethodType =
             | UsersManager(n) -> methodTypeCmdImpl this n (fst( Reflection.FSharpValue.GetUnionFields(this,this.GetType()))).Name
         member this.Name = "method"
 and UsersManagerMethod =
-    | SetUserPreference //(userLogin, preferenceName, preferenceValue) [ No example available ]
-    | GetUserPreference //(userLogin, preferenceName) [ No example available ]
-    | GetUsers// (userLogins = '') [ Example in XML, Json, Tsv (Excel) ]
-    | GetUsersLogin //() [ Example in XML, Json, Tsv (Excel) ]
-    | GetUsersSitesFromAccess// (access) [ Example in XML, Json, Tsv (Excel) ]
-    | GetUsersAccessFromSite //(idSite) [ Example in XML, Json, Tsv (Excel) ]
-    | GetUsersWithSiteAccess //(idSite, access) [ Example in XML, Json, Tsv (Excel) ]
-    | GetSitesAccessFromUser //(userLogin) [ Example in XML, Json, Tsv (Excel) ]
-    | GetUser //(userLogin) [ Example in XML, Json, Tsv (Excel) ]
-    | GetUserByEmail //(userEmail) [ No example available ]
-    | AddUser //(userLogin, password, email, alias = '') [ No example available ]
-    | UpdateUser //(userLogin, password = '', email = '', alias = '') [ No example available ]
-    | DeleteUser //(userLogin) [ No example available ]
-    | UserExists //(userLogin) [ Example in XML, Json, Tsv (Excel) ]
-    | UserEmailExists //(userEmail) [ No example available ]
-    | SetUserAccess// (userLogin, access, idSites) [ No example available ]
-    | GetTokenAuth// (userLogin, md5Password) [ No example available ]
+    | SetUserPreference of string * string * string
+    | GetUserPreference of string * string
+    | GetUsers of seq<string> option 
+    | GetUsersLogin 
+    | GetUsersSitesFromAccess of string
+    | GetUsersAccessFromSite of SiteId 
+    | GetUsersWithSiteAccess of SiteId * string
+    | GetSitesAccessFromUser of string 
+    | GetUser of string 
+    | GetUserByEmail of string 
+    | AddUser of string * string * string * string option 
+    | UpdateUser of string * string option * string option * string option 
+    | DeleteUser of string
+    | UserExists of string
+    | UserEmailExists of string
+    | SetUserAccess of string * string * SiteId
+    | GetTokenAuth of string * string
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | SetUserPreference(userLogin, preferenceName, preferenceValue) as t -> (methodCmdImpl t) + makeParams2([|("userLogin",userLogin);("preferenceName",preferenceName);("preferenceValue",preferenceValue)|]) 
+                | GetUserPreference(userLogin, preferenceName) as t -> (methodCmdImpl t) + makeParams2([|("userLogin",userLogin);("preferenceName",preferenceName)|])
+                | GetUsers(userLogins) as t -> (methodCmdImpl t) + makeLogins(userLogins)
+                | GetUsersLogin as t -> methodCmdImpl t
+                | GetUsersSitesFromAccess(access) as t -> (methodCmdImpl t) + makeParam("access",access)
+                | GetUsersAccessFromSite(siteId) as t -> (methodCmdImpl t) + (siteId:>ApiParameter).Command 
+                | GetUsersWithSiteAccess (siteId,access) as t -> (methodCmdImpl t) + (siteId:>ApiParameter).Command
+                                                                 + makeParam("access",access)  
+                | GetSitesAccessFromUser (userLogin) as t -> (methodCmdImpl t) + makeParam("userLogin",userLogin)
+                | GetUser (userLogin) as t -> (methodCmdImpl t) + makeParam("userLogin",userLogin)
+                | GetUserByEmail (userEmail) as t -> (methodCmdImpl t) + makeParam("userEmail",userEmail)
+                | AddUser (userLogin, password, email, alias) as t -> (methodCmdImpl t) + makeParams2([|("userLogin",userLogin);("password",password);("email",email)|])
+                                                                             + (if (alias.IsSome) then makeParam("alias",alias.Value) else "")
+                | UpdateUser (userLogin, password , email , alias) as t -> (methodCmdImpl t) + makeParam("userLogin",userLogin) 
+                                                                              + (if (password.IsSome) then makeParam("password",password.Value) else "") 
+                                                                               + (if (email.IsSome) then makeParam("email",email.Value) else "") 
+                                                                                + (if (alias.IsSome) then makeParam("alias",alias.Value) else "")   
+                | DeleteUser (userLogin) as t -> (methodCmdImpl t) + makeParam("userLogin",userLogin) 
+                | UserExists (userLogin) as t -> (methodCmdImpl t) + makeParam("userLogin",userLogin) 
+                | UserEmailExists (userEmail) as t -> (methodCmdImpl t) + makeParam("userEmail",userEmail) 
+                | SetUserAccess (userLogin, access, idSites) as t -> (methodCmdImpl t) + makeParams2([|("userLogin",userLogin);("access",access)|]) + (idSites:>ApiParameter).Command 
+                | GetTokenAuth (userLogin, md5Password) as t -> (methodCmdImpl t) + makeParams2([|("userLogin",userLogin);("md5Password",md5Password)|])
 and SEOMethod =
     | GetRank of string
     interface ApiMethod with
@@ -101,9 +127,9 @@ and TransitionsMethod =
     interface ApiMethod with
         member this.Command =
                 match this with
-                | GetTransitionsForPageTitle(sid,ts,pt) as t -> (methodCmdImpl t) + ( makeParams [sid:>ApiParameter; ts:>ApiParameter]) + makeParam("pageTitle",pt)
-                | GetTransitionsForPageUrl(sid,ts,pu) as t -> (methodCmdImpl t) + ( makeParams [sid:>ApiParameter; ts:>ApiParameter]) + makeParam("pageUrl",pu)
-                | GetTransitionsForAction(sid,ts,an,at) as t -> (methodCmdImpl t) + ( makeParams [sid:>ApiParameter; ts:>ApiParameter]) + makeParam("actionName",an)+ makeParam("actionType",at)
+                | GetTransitionsForPageTitle(sid,ts,pt) as t -> (methodCmdImpl t) + ( makeParams [|sid:>ApiParameter; ts:>ApiParameter|]) + makeParam("pageTitle",pt)
+                | GetTransitionsForPageUrl(sid,ts,pu) as t -> (methodCmdImpl t) + ( makeParams [|sid:>ApiParameter; ts:>ApiParameter|]) + makeParam("pageUrl",pu)
+                | GetTransitionsForAction(sid,ts,an,at) as t -> (methodCmdImpl t) + ( makeParams [|sid:>ApiParameter; ts:>ApiParameter|]) + makeParam("actionName",an)+ makeParam("actionType",at)
                 | GetTranslations as t  -> methodCmdImpl t
 and PDFReportsMethod =
     | AddReport // (idSite, description, period, reportType, reportFormat, reports, parameters) [ No example available ]
