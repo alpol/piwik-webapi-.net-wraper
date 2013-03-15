@@ -148,16 +148,49 @@ and TransitionsMethod =
                                                                            + (if (returnNormalizedUrls.IsSome) then makeParam("returnNormalizedUrls",returnNormalizedUrls.Value) else "")  
                 | GetTranslations as t  -> methodCmdImpl t
 and PDFReportsMethod =
-    | AddReport // (idSite, description, period, reportType, reportFormat, reports, parameters) [ No example available ]
-    | UpdateReport //(idReport, idSite, description, period, reportType, reportFormat, reports, parameters) [ No example available ]
-    | DeleteReport //(idReport) [ No example available ]
-    | GetReports //(idSite = '', period = '', idReport = '', ifSuperUserReturnOnlySuperUserReports = '') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
-    | GenerateReport //(idReport, date, language = '', outputType = '', period = '', reportFormat = '', parameters = '') [ No example available ]
-    | SendReport //(idReport, period = '', date = '') [ No example available ]
+    | AddReport of SiteId * PeriodType * string *  string * string * string * string
+    | UpdateReport of SiteId * PeriodType * string * string* string * string * string * string 
+    | DeleteReport of string
+    | GetReports of SiteId option * PeriodType option * string option * string option 
+    | GenerateReport of string * DateSlice * string option * string option * PeriodType option * string option * string option
+    | SendReport of string * TimeSlice option 
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | AddReport (siteId, periodType,description,  reportType, reportFormat, reports, parameters) as t -> (methodCmdImpl t)
+                                                                                                                         + (makeParam2 siteId) 
+                                                                                                                         + periodType.Command
+                                                                                                                         + (makeParams2 [|("description",description);
+                                                                                                                                            ("reportType",reportType);
+                                                                                                                                            ("reportFormat",reportFormat);
+                                                                                                                                            ("reports",reports);
+                                                                                                                                            ("parameters",parameters)|])
+                |UpdateReport (siteId, periodType,idReport, description, reportType, reportFormat, reports, parameters) as t -> (methodCmdImpl t)
+                                                                                                                                 + (makeParam2 siteId) 
+                                                                                                                                 + periodType.Command
+                                                                                                                                 + (makeParams2 [|("idReport",idReport);
+                                                                                                                                            ("description",description);
+                                                                                                                                            ("reportType",reportType);
+                                                                                                                                            ("reportFormat",reportFormat);
+                                                                                                                                            ("reports",reports);
+                                                                                                                                            ("parameters",parameters)|])
+                | DeleteReport (idReport)as t -> (methodCmdImpl t) + makeParam("idReport",idReport)
+                | GetReports (idSite , period, idReport , ifSuperUserReturnOnlySuperUserReports ) as t -> (methodCmdImpl t)
+                                                                                                            + (if (idSite.IsSome) then (makeParam2 idSite.Value) else "")
+                                                                                                            + (if (period.IsSome) then (period.Value.Command) else "")
+                                                                                                            + (if (idReport.IsSome) then makeParam("idReport",idReport.Value) else "" ) 
+                                                                                                            + (if (ifSuperUserReturnOnlySuperUserReports.IsSome) then makeParam("ifSuperUserReturnOnlySuperUserReports",ifSuperUserReturnOnlySuperUserReports.Value) else "" ) 
+                | GenerateReport (idReport, date, language, outputType, period , reportFormat, parameters) as t -> (methodCmdImpl t)
+                                                                                                                 +  makeParam("idReport",idReport) 
+                                                                                                                 +  (date:>ApiParameter).Command
+                                                                                                                 + (if (language.IsSome) then makeParam("language",language.Value) else "" ) 
+                                                                                                                 + (if (outputType.IsSome) then makeParam("outputType",outputType.Value) else "" ) 
+                                                                                                                 + (if (period.IsSome) then ( period.Value.Command) else "")
+                                                                                                                 + (if (reportFormat.IsSome) then makeParam("reportFormat",reportFormat.Value) else "" ) 
+                                                                                                                 + (if (parameters.IsSome) then makeParam("parameters",parameters.Value) else "" ) 
+                | SendReport (idReport, timeSlice) as t -> (methodCmdImpl t) + (if (timeSlice.IsSome) then (makeParam2 timeSlice.Value) else "")
+
+
 and OverlayMethod =
     | GetTranslations of SiteId 
     | GetExcludedQueryParameters of SiteId 

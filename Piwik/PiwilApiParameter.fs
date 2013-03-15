@@ -19,6 +19,23 @@ type ApiParameter =
 
 type ApiMethod =
     abstract Command : string
+
+type DateSlice =
+    | Date  of DateTime 
+    | Today | Yesterday
+    | Last     of int 
+    | Previous of int 
+    | Period    of DateTime * DateTime     
+    interface ApiParameter with
+        member this.Command =
+            match this with
+                | Date(d)      -> String.Format("&date={1}", d.ToString(Helpers.dateFormat))
+                | Today         -> "&date=today"
+                | Yesterday     -> "&date=yesterday"
+                | Last(n)     -> String.Format("&date=last{0}",n)  
+                | Previous(n) -> String.Format("&date=previous{0}",n)
+                | Period(s,e) -> String.Format("&date={0},{1}",s.ToString(Helpers.dateFormat),e.ToString(Helpers.dateFormat))
+        member this.Name = "date"
               
 type TimeSlice =
     | Date  of DateTime * PeriodType
