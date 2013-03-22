@@ -1,4 +1,4 @@
-﻿module PiwikSafeMethodDefs
+﻿module PiwikMethodDefs
 open System
 open PiwikApiParameter
 

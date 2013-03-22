@@ -42,3 +42,13 @@ let addEnhanced (uri:string) = addParameter("enhanced", "true") uri
 let execute (apiCall:string) =
     let webCl = new System.Net.WebClient()
     webCl.DownloadString(apiCall)
+
+let asyncExecuteRequest (apiCall:string) = 
+    async{
+            let webCl = new System.Net.WebClient()
+            return! webCl.AsyncDownloadString(Uri(apiCall))
+            }
+
+let executeAsync (apiCall:string) s f =
+    let task = asyncExecuteRequest apiCall
+    Async.StartWithContinuations(task,s,f, fun _ -> ignore())

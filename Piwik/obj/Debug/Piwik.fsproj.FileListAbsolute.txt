@@ -26,3 +26,10 @@ C:\Projects\Research\Piwik\Piwik\bin\Debug\Cmg.Piwik.Web.Api.dll
 C:\Projects\Research\Piwik\Piwik\bin\Debug\Cmg.Piwik.Web.Api.pdb
 C:\Projects\Research\Piwik\Piwik\obj\Debug\Cmg.Piwik.Web.Api.dll
 C:\Projects\Research\Piwik\Piwik\obj\Debug\Cmg.Piwik.Web.Api.pdb
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik\bin\Debug\Cmg.Piwik.Web.Api.dll
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik\bin\Debug\Cmg.Piwik.Web.Api.pdb
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik\bin\Debug\Piwik.XML
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik\bin\Debug\FSharp.Core.dll
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik\bin\Debug\FSharp.Core.xml
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik\obj\Debug\Cmg.Piwik.Web.Api.dll
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik\obj\Debug\Cmg.Piwik.Web.Api.pdb

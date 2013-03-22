@@ -1,0 +1,7 @@
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Safe\bin\Debug\Piwik.Safe.XML
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Safe\bin\Debug\Cmg.PiwikSafe.Web.Api.dll
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Safe\bin\Debug\Cmg.PiwikSafe.Web.Api.pdb
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Safe\bin\Debug\FSharp.Core.dll
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Safe\bin\Debug\FSharp.Core.xml
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Safe\obj\Debug\Cmg.PiwikSafe.Web.Api.dll
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Safe\obj\Debug\Cmg.PiwikSafe.Web.Api.pdb

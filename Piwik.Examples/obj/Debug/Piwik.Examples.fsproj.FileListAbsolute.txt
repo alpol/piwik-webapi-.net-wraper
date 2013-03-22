@@ -1,0 +1,17 @@
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\bin\Debug\Piwik.Examples.exe.config
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\bin\Debug\Piwik.Examples.XML
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\bin\Debug\Piwik.Examples.exe
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\bin\Debug\Piwik.Examples.pdb
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\bin\Debug\Cmg.Piwik.Web.Api.dll
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\bin\Debug\FSharp.Core.dll
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\bin\Debug\FSharp.Data.DesignTime.dll
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\bin\Debug\FSharp.Data.dll
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\bin\Debug\Cmg.Piwik.Web.Api.pdb
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\bin\Debug\FSharp.Data.pdb
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\bin\Debug\FSharp.Data.xml
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\bin\Debug\FSharp.Data.DesignTime.pdb
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\bin\Debug\FSharp.Data.DesignTime.xml
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\bin\Debug\FSharp.Core.xml
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\obj\Debug\Piwik.Examples.fsprojResolveAssemblyReference.cache
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\obj\Debug\Piwik.Examples.exe
+C:\Projects\Research\Piwik\piwik-webapi-.net-wraper\Piwik.Examples\obj\Debug\Piwik.Examples.pdb

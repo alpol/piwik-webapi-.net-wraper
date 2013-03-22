@@ -11,6 +11,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Readme.txt = Readme.txt
 	EndProjectSection
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Piwik.Examples", "Piwik.Examples\Piwik.Examples.fsproj", "{5788FE62-FAC4-4CAA-9228-0C705579C623}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Piwik.Safe", "Piwik.Safe\Piwik.Safe.fsproj", "{84FDF028-F94A-4D6C-9CD1-D04E078B7E92}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +29,14 @@ Global
 		{FE7241CD-1529-4DC0-B806-FACDE6FB0B15}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE7241CD-1529-4DC0-B806-FACDE6FB0B15}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE7241CD-1529-4DC0-B806-FACDE6FB0B15}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5788FE62-FAC4-4CAA-9228-0C705579C623}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5788FE62-FAC4-4CAA-9228-0C705579C623}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5788FE62-FAC4-4CAA-9228-0C705579C623}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5788FE62-FAC4-4CAA-9228-0C705579C623}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84FDF028-F94A-4D6C-9CD1-D04E078B7E92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84FDF028-F94A-4D6C-9CD1-D04E078B7E92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84FDF028-F94A-4D6C-9CD1-D04E078B7E92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84FDF028-F94A-4D6C-9CD1-D04E078B7E92}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

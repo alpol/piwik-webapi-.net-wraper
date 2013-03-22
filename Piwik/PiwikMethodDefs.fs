@@ -5,10 +5,11 @@ open System
 
 let private makeParam2 p = (p:>ApiParameter).Command 
 let private makeParams p = p |> Seq.fold (fun s e -> s + (makeParam2 e) ) ""
-let private makeParam (n, v) = String.Format(@"&{1}={2}",  n, v) 
+let private makeParam (n, v) = String.Format(@"&{0}={1}",  n, v) 
 let private makeParams2 p = p |> Seq.fold(fun s e -> s + (makeParam e))""
 let private methodCmdImpl t = (fst( Reflection.FSharpValue.GetUnionFields(t,t.GetType()))).Name |> fun s -> s.Substring(0,1).ToLower() + s.Substring(1)
 let private methodTypeCmdImpl o m s = String.Format("&{0}={1}", (o :> ApiParameter).Name, s + "." + (m :> ApiMethod).Command ) 
+let private getUNIXTimeStamp (dt:DateTime) = (dt.ToUniversalTime() - DateTime(1970,1,1,0,0,0,0,DateTimeKind.Utc)).TotalSeconds
 let private makeLogins logins =
     match logins with
     | None -> ""
@@ -194,49 +195,66 @@ and PDFReportsMethod =
 and OverlayMethod =
     | GetTranslations of SiteId 
     | GetExcludedQueryParameters of SiteId 
-    | GetFollowingPages  of SiteId * TimeSlice * string 
+    | GetFollowingPages  of SiteId * TimeSlice * string * SegmentType option
     interface ApiMethod with
         member this.Command =
                 match this with
                 | GetTranslations(sid) as t -> (methodCmdImpl t) +  (makeParam2 sid)
                 | GetExcludedQueryParameters(sid) as t -> (methodCmdImpl t) +  (makeParam2 sid)
-                | GetFollowingPages(sid,ts,url) as t -> (methodCmdImpl t) + ( makeParam2 sid) + (makeParam2 ts) + makeParam("url",url)
+                | GetFollowingPages(sid,ts,url,segment) as t -> (methodCmdImpl t) + ( makeParam2 sid) + (makeParam2 ts) + makeParam("url",url)
+                                                                + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "") 
 
 and MobileMessagingMethod =
-    | AreSMSAPICredentialProvided //() [ Example in XML, Json, Tsv (Excel) ]
-    | GetSMSProvider //() [ Example in XML, Json, Tsv (Excel) ]
-    | SetSMSAPICredential //(provider, apiKey) [ No example available ]
-    | AddPhoneNumber //(phoneNumber) [ No example available ]
-    | SanitizePhoneNumber //(phoneNumber) [ No example available ]
-    | GetCreditLeft //() [ Example in XML, Json, Tsv (Excel) ]
-    | RemovePhoneNumber //(phoneNumber) [ No example available ]
-    | ValidatePhoneNumber //(phoneNumber, verificationCode) [ No example available ]
-    | DeleteSMSAPICredential // () [ Example in XML, Json, Tsv (Excel) ]
-    | SetDelegatedManagement //(delegatedManagement) [ No example available ]
-    | GetDelegatedManagement //() [ Example in XML, Json, Tsv (Excel) ]
+    | AreSMSAPICredentialProvided 
+    | GetSMSProvider 
+    | SetSMSAPICredential of string * string
+    | AddPhoneNumber of string
+    | SanitizePhoneNumber of string
+    | GetCreditLeft 
+    | RemovePhoneNumber of string
+    | ValidatePhoneNumber of string * string
+    | DeleteSMSAPICredential 
+    | SetDelegatedManagement of string
+    | GetDelegatedManagement 
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | AreSMSAPICredentialProvided|GetSMSProvider|GetCreditLeft|DeleteSMSAPICredential|GetDelegatedManagement as t -> methodCmdImpl t 
+                | SetSMSAPICredential(provider, apiKey) as t -> methodCmdImpl t  + (makeParams2 [|("provider",provider);("apiKey",apiKey)|])
+                | AddPhoneNumber (phoneNumber) | SanitizePhoneNumber (phoneNumber) | RemovePhoneNumber (phoneNumber)  as t -> methodCmdImpl t + makeParam("phoneNumber",phoneNumber)
+                | ValidatePhoneNumber (phoneNumber, verificationCode) as t -> methodCmdImpl t + (makeParams2 [|("phoneNumber",phoneNumber);("verificationCode",verificationCode)|])
+                | SetDelegatedManagement (delegatedManagement) as t -> methodCmdImpl t + makeParam("delegatedManagement",delegatedManagement)
 and LiveMethod =
-    | GetCounters //(idSite, lastMinutes, segment = '') [ Example in XML, Json, Tsv (Excel) ]
-    | GetLastVisitsDetails // (idSite, period, date, segment = '', filter_limit = '', maxIdVisit = '', minTimestamp = '') 
+    | GetCounters  of SiteId * int * SegmentType option
+    | GetLastVisitsDetails of SiteId * TimeSlice * SegmentType option  * int option * int option * DateTime option 
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | GetCounters (idSite, lastMinutes, segment) as t -> methodCmdImpl t + makeParam("lastMinutes",lastMinutes)
+                                                                         + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "") 
+                                                                     
+                | GetLastVisitsDetails (sid, ts, segment, filter_limit , maxIdVisit , minTimestamp ) as t -> methodCmdImpl t 
+                                                                                                            + ( makeParams [|sid:>ApiParameter; ts:>ApiParameter|])
+                                                                                                            + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "") 
+                                                                                                            + (if (filter_limit.IsSome) then makeParam("filter_limit",filter_limit.Value) else "" )
+                                                                                                            + (if (maxIdVisit.IsSome) then makeParam("maxIdVisit",maxIdVisit.Value) else "" )
+                                                                                                            + (if (minTimestamp.IsSome) then makeParam("minTimestamp",getUNIXTimeStamp minTimestamp.Value) else "" )
+
 and LanguagesManagerMethod =
-    | IsLanguageAvailable //(languageCode) [ Example in XML, Json, Tsv (Excel) ]
-    | GetAvailableLanguages //() [ Example in XML, Json, Tsv (Excel) ]
-    | GetAvailableLanguagesInfo //() [ Example in XML, Json, Tsv (Excel) ]
-    | GetAvailableLanguageNames //() [ Example in XML, Json, Tsv (Excel) ]
-    | GetTranslationsForLanguage //(languageCode) [ Example in XML, Json, Tsv (Excel) ]
-    | GetLanguageForUser //(login) [ No example available ]
-    | SetLanguageForUser //(login, languageCode) [ No example available ]
+    | IsLanguageAvailable of string
+    | GetAvailableLanguages 
+    | GetAvailableLanguagesInfo 
+    | GetAvailableLanguageNames 
+    | GetTranslationsForLanguage of string
+    | GetLanguageForUser of string
+    | SetLanguageForUser of string * string
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                |  IsLanguageAvailable (languageCode) | GetTranslationsForLanguage(languageCode) as t -> methodCmdImpl t  + makeParam("languageCode",languageCode)
+                | GetAvailableLanguages | GetAvailableLanguagesInfo | GetAvailableLanguageNames  as t -> methodCmdImpl t
+                | GetLanguageForUser (login) as t -> methodCmdImpl t  + makeParam("login",login)
+                | SetLanguageForUser (login,languageCode) as t -> methodCmdImpl t  + makeParams2[|("login",login);("languageCode",languageCode)|]
 and ImageGraphMethod =
     | Get
     interface ApiMethod with
@@ -258,43 +276,66 @@ and ExampleAPIMethod =
                 match this with
                 | _ as t -> methodCmdImpl t 
 and CustomVariablesMethod =
-    | GetCustomVariables //(idSite, period, date, segment = '', expanded = '') 
-    | GetCustomVariablesValuesFromNameId //(idSite, period, date, idSubtable, segment = '')
+    | GetCustomVariables of SiteId * TimeSlice * SegmentType option * bool option
+    | GetCustomVariablesValuesFromNameId of SiteId * TimeSlice * string * SegmentType option
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | GetCustomVariables (sid,ts,segment, expanded)  as t -> methodCmdImpl t  + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                          + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "") 
+                                                                                          + (if (expanded.IsSome && expanded.Value) then makeParam("expanded",1) else "" )
+                | GetCustomVariablesValuesFromNameId (sid,ts, idSubtable, segment )   as t -> methodCmdImpl t  + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                                                + makeParam("idSubtable",idSubtable)
+                                                                                                                + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                                                                                                                                         
 and MultiSitesMethod =
-    | GetOne of SiteId * TimeSlice
-    | GetAll of TimeSlice
+    | GetOne of SiteId * TimeSlice * SegmentType option * bool option 
+    | GetAll of TimeSlice * SegmentType option * bool option * string option
     interface ApiMethod with
         member this.Command =
                 match this with
-                | GetOne(sid,ts) as t -> (methodCmdImpl t) + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
-                | GetAll(ts) as t -> (methodCmdImpl t) + (ts:>ApiParameter).Command
+                | GetOne(sid,ts,segment,enhanced) as t -> (methodCmdImpl t) + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                     + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "") 
+                                                                     + (if (enhanced.IsSome) then makeParam("enhanced",enhanced.Value) else "" )
+                                                                     
+                | GetAll(ts,segment,enhanced,pattern) as t -> (methodCmdImpl t) + (ts:>ApiParameter).Command
+                                                                  + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "") 
+                                                                     + (if (enhanced.IsSome) then makeParam("enhanced",enhanced.Value) else "" )
+                                                                     + (if (pattern.IsSome) then makeParam("pattern",pattern.Value) else "" )
 
 and VisitsSummaryMethod =
     | Get
-    | GetVisits //(idSite, period, date, segment = '') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
-    | GetUniqueVisitors// (idSite, period, date, segment = '') [ Example in XML, Json, Tsv (Excel) , RSS of the last 10 days ]
-    | GetActions //(idSite, period, date, segment = '') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
-    | GetMaxActions //(idSite, period, date, segment = '') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
-    | GetBounceCount //(idSite, period, date, segment = '') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
-    | GetVisitsConverted //(idSite, period, date, segment = '') [ Example in XML, Json, Tsv (Excel) , RSS of the last 10 days ]
-    | GetSumVisitsLength //(idSite, period, date, segment = '') [ Example in XML, Json, Tsv (Excel) , RSS of the last 10 days ]
-    | GetSumVisitsLengthPretty //(idSite, period, date, segment = '') [ Example in XML, Json, Tsv 
+    | GetVisits of SiteId * TimeSlice * SegmentType option
+    | GetUniqueVisitors of SiteId * TimeSlice * SegmentType option
+    | GetActions of SiteId * TimeSlice * SegmentType option
+    | GetMaxActions of SiteId * TimeSlice * SegmentType option
+    | GetBounceCount of SiteId * TimeSlice * SegmentType option
+    | GetVisitsConverted of SiteId * TimeSlice * SegmentType option
+    | GetSumVisitsLength of SiteId * TimeSlice * SegmentType option
+    | GetSumVisitsLengthPretty of SiteId * TimeSlice * SegmentType option
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | Get as t -> methodCmdImpl t 
+                |GetVisits (sid,ts,segment) | GetUniqueVisitors (sid,ts,segment) | GetActions  (sid,ts,segment)
+                | GetMaxActions (sid,ts,segment)| GetBounceCount (sid,ts,segment)
+                | GetVisitsConverted  (sid,ts,segment)| GetSumVisitsLength (sid,ts,segment)
+                | GetSumVisitsLengthPretty (sid,ts,segment) as t -> (methodCmdImpl t) + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                     + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")  
 and VisitTimeMethod =
-    | GetVisitInformationPerServerTime
-    | GetVisitInformationPerLocalTime
-    | GetByDayOfWeek
+    | GetVisitInformationPerServerTime of SiteId * TimeSlice * SegmentType option * bool option
+    | GetVisitInformationPerLocalTime of SiteId * TimeSlice * SegmentType option
+    | GetByDayOfWeek of SiteId * TimeSlice * SegmentType option
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | GetVisitInformationPerLocalTime(sid,ts,segment)
+                | GetByDayOfWeek(sid,ts,segment) as t -> (methodCmdImpl t) + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                     + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")  
+                | GetVisitInformationPerServerTime(sid,ts,segment,hfhwt)as t -> (methodCmdImpl t) + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                                    + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")  
+                                                                                                    + (if (hfhwt.IsSome) then makeParam("hideFutureHoursWhenToday",hfhwt.Value) else "" )
+
 and ActionsMethod =
     | Get //(idSite, period, date, segment = '', columns = '')  	 
     | GetPageUrls //(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
