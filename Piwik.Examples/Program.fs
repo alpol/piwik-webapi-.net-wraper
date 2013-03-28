@@ -12,12 +12,13 @@ let getOne () =
     let startDay = DateTime.Now.AddDays -5.0
     let endDay  = DateTime.Now
     let serviceUri,authToken = getUrlAndToken()
-    let apiCall =  serviceUri |> start |>  addAuth authToken |>  addFormat FormatType.Csv |> addPeriod (TimeSlice.Date(endDay,PeriodType.Day))
-                    |> addMethod (PiwikMethodDefs.MultiSites (PiwikMethodDefs.MultiSitesMethod.GetOne( (SiteId.Single 2),(TimeSlice.Date(endDay,PeriodType.Week)),None,None)))
+    let apiCall =  serviceUri |> start |>  addAuth authToken |>  addFormat FormatType.Xml |> addPeriod (TimeSlice.Date(endDay,PeriodType.Day))
+                    |> addMethod (PiwikMethodDefs.MultiSites (PiwikMethodDefs.MultiSitesMethod.GetOne( (SiteId.Single 2),(TimeSlice.Today),None,None)))
                     //|> addSegment (Segments([(VisitLocationCity(Equals,"Boston"),Or)], VisitLocationProvider(Equals,"comcast.net")))
                     //|> addParameter("label","veterans")
                     |> addParam(ExpandedType.Expanded)
                     |> addFilter (FilterType.Limit 1)
+    Console.WriteLine apiCall
     execute apiCall
 
 

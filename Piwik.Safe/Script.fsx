@@ -15,17 +15,17 @@ open PiwikCallBuilder
 let t = System.IO.File.ReadAllLines(@"c:\TEMP\piwik-test.txt").[0].Split([|','|])
 let serviceUri = t.[0]
 let authToken = t.[1]
+let startDay = DateTime.Now.AddDays -5.0
+let endDay  = DateTime.Now
 
 let getAll () =
-    let startDay = DateTime.Now.AddDays -5.0
-    let endDay  = DateTime.Now
     let apiCall =  serviceUri |> start |>  addAuth authToken |>  addFormat FormatType.Csv |> addPeriod (TimeSlice.Date(endDay,PeriodType.Day))
                     |> addMethod (MultiSites (GetAll))
                     //|> addSegment (Segments([(VisitLocationCity(Equals,"Boston"),Or)], VisitLocationProvider(Equals,"comcast.net")))
                     //|> addParameter("label","veterans")
                     |> addParam(ExpandedType.Expanded)
                     |> addFilter (FilterType.Limit 1)
-    
+    printfn "%s" apiCall
     execute apiCall   
 
     

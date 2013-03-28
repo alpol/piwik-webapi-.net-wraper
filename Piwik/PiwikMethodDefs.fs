@@ -337,115 +337,231 @@ and VisitTimeMethod =
                                                                                                     + (if (hfhwt.IsSome) then makeParam("hideFutureHoursWhenToday",hfhwt.Value) else "" )
 
 and ActionsMethod =
-    | Get //(idSite, period, date, segment = '', columns = '')  	 
-    | GetPageUrls //(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
-    | GetPageUrlsFollowingSiteSearch //(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
-    | GetPageTitlesFollowingSiteSearch //(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
-    | GetEntryPageUrls //(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
-    | GetExitPageUrls //(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
-    | GetPageUrl //(pageUrl, idSite, period, date, segment = '') 
-    | GetPageTitles //(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
-    | GetEntryPageTitles //(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
-    | GetExitPageTitles //(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
-    | GetPageTitle //(pageName, idSite, period, date, segment = '') 
-    | GetDownloads //(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
-    | GetDownload //(downloadUrl, idSite, period, date, segment = '') 
-    | GetOutlinks //(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
-    | GetOutlink //(outlinkUrl, idSite, period, date, segment = '') 
-    | GetSiteSearchKeywords //(idSite, period, date, segment = '')  	 
-    | AddPagesPerSearchColumn //(dataTable, columnToRead = 'nb_hits') 
-    | GetSiteSearchNoResultKeywords //(idSite, period, date, segment = '')  	 
-    | GetSiteSearchCategories //(idSite, period, date, segment = '') 
+    | Get of SiteId * TimeSlice * SegmentType option * string option//(idSite, period, date, segment = '', columns = '')  	 
+    | GetPageUrls of SiteId * TimeSlice * SegmentType option *  bool option * string option//(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
+    | GetPageUrlsFollowingSiteSearch of SiteId * TimeSlice * SegmentType option *  bool option * string option//(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
+    | GetPageTitlesFollowingSiteSearch of SiteId * TimeSlice * SegmentType option *  bool option * string option//(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
+    | GetEntryPageUrls of SiteId * TimeSlice * SegmentType option *  bool option * string option//(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
+    | GetExitPageUrls of SiteId * TimeSlice * SegmentType option *  bool option * string option//(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
+    | GetPageUrl of string * SiteId * TimeSlice * SegmentType option//(pageUrl, idSite, period, date, segment = '') 
+    | GetPageTitles of SiteId * TimeSlice * SegmentType option *  bool option * string option//(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
+    | GetEntryPageTitles of SiteId * TimeSlice * SegmentType option *  bool option * string option//(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
+    | GetExitPageTitles of SiteId * TimeSlice * SegmentType option *  bool option * string option//(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
+    | GetPageTitle of string * SiteId * TimeSlice * SegmentType option//(pageName, idSite, period, date, segment = '') 
+    | GetDownloads of SiteId * TimeSlice * SegmentType option *  bool option * string option//(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
+    | GetDownload of string * SiteId * TimeSlice * SegmentType option//(downloadUrl, idSite, period, date, segment = '') 
+    | GetOutlinks of SiteId * TimeSlice * SegmentType option *  bool option * string option//(idSite, period, date, segment = '', expanded = '', idSubtable = '')  	 
+    | GetOutlink  of string * SiteId * TimeSlice * SegmentType option//(outlinkUrl, idSite, period, date, segment = '') 
+    | GetSiteSearchKeywords of SiteId * TimeSlice * SegmentType option//(idSite, period, date, segment = '')  	 
+    | AddPagesPerSearchColumn of string * string option //(dataTable, columnToRead = 'nb_hits') 
+    | GetSiteSearchNoResultKeywords of SiteId * TimeSlice * SegmentType option //(idSite, period, date, segment = '')  	 
+    | GetSiteSearchCategories  of SiteId * TimeSlice * SegmentType option//(idSite, period, date, segment = '') 
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | Get(sid,ts,segment,columns) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                        + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                        + (if (columns.IsSome) then makeParam("columns",columns.Value) else "" ) 
+                | GetPageUrls(sid,ts,segment,expanded,idSubtable)
+                | GetPageUrlsFollowingSiteSearch(sid,ts,segment,expanded,idSubtable)
+                | GetPageTitlesFollowingSiteSearch(sid,ts,segment,expanded,idSubtable)
+                | GetEntryPageUrls(sid,ts,segment,expanded,idSubtable)
+                | GetExitPageUrls(sid,ts,segment,expanded,idSubtable)
+                | GetPageTitles(sid,ts,segment,expanded,idSubtable)
+                | GetEntryPageTitles(sid,ts,segment,expanded,idSubtable)
+                | GetExitPageTitles(sid,ts,segment,expanded,idSubtable)
+                | GetDownloads(sid,ts,segment,expanded,idSubtable)
+                | GetOutlinks(sid,ts,segment,expanded,idSubtable) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                        + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                        + (if (expanded.IsSome && expanded.Value) then makeParam("expanded",1) else "" ) 
+                                                                        + (if (idSubtable.IsSome) then makeParam("idSubtable",idSubtable.Value) else "" )
+                | GetPageUrl(pageUrl,sid,ts,segment) as t -> methodCmdImpl t + makeParam("pageUrl",pageUrl) + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                        + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                | GetPageTitle(pageName,sid,ts,segment) as t -> methodCmdImpl t + makeParam("pageName",pageName) + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                        + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                | GetDownload(downloadUrl,sid,ts,segment) as t -> methodCmdImpl t + makeParam("downloadUrl",downloadUrl) + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                        + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                | GetOutlink(outlinkUrl,sid,ts,segment) as t -> methodCmdImpl t + makeParam("outlinkUrl",outlinkUrl) + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                        + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                | GetSiteSearchKeywords(sid,ts,segment)
+                | GetSiteSearchNoResultKeywords(sid,ts,segment)
+                | GetSiteSearchCategories(sid,ts,segment) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                        + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")                                                        
+                | AddPagesPerSearchColumn(dataTable,columnToRead)as t -> methodCmdImpl t + makeParam("dataTable",dataTable)
+                                                                        + (if (columnToRead.IsSome ) then makeParam("columnToRead",columnToRead.Value) else makeParam("columnToRead","nb_hits")  )   
 and ReferersMethod =
-    | GetRefererType
-    | GetKeywords
-    | GetKeywordsForPageUrl
-    | GetKeywordsForPageTitle
-    | GetSearchEnginesFromKeywordId
-    | GetSearchEngines
-    | GetKeywordsFromSearchEngineId
-    | GetCampaigns
-    | GetKeywordsFromCampaignId
-    | GetWebsites
-    | GetUrlsFromWebsiteId
-    | GetSocials
-    | GetUrlsForSocial
-    | GetNumberOfDistinctSearchEngines
-    | GetNumberOfDistinctKeywords
-    | GetNumberOfDistinctCampaigns
-    | GetNumberOfDistinctWebsites
-    | GetNumberOfDistinctWebsitesUrls
+    | GetRefererType of SiteId * TimeSlice * SegmentType option * string option  * string option * bool option
+    | GetAll of SiteId * TimeSlice * SegmentType option
+    | GetKeywords of SiteId * TimeSlice * SegmentType option * bool option
+    | GetKeywordsForPageUrl of SiteId * TimeSlice * string
+    | GetKeywordsForPageTitle of SiteId * TimeSlice * string
+    | GetSearchEnginesFromKeywordId of SiteId * TimeSlice * string * SegmentType option 
+    | GetSearchEngines of SiteId * TimeSlice * SegmentType option * bool option
+    | GetKeywordsFromSearchEngineId of SiteId * TimeSlice * string * SegmentType option 
+    | GetCampaigns of SiteId * TimeSlice * SegmentType option * bool option
+    | GetKeywordsFromCampaignId  of SiteId * TimeSlice * string * SegmentType option
+    | GetWebsites of SiteId * TimeSlice * SegmentType option * bool option
+    | GetUrlsFromWebsiteId of SiteId * TimeSlice * string * SegmentType option
+    | GetSocials of SiteId * TimeSlice * SegmentType option * bool option
+    | GetUrlsForSocial of SiteId * TimeSlice  * SegmentType option * string option
+    | GetNumberOfDistinctSearchEngines of SiteId * TimeSlice  * SegmentType option
+    | GetNumberOfDistinctKeywords of SiteId * TimeSlice  * SegmentType option
+    | GetNumberOfDistinctCampaigns of SiteId * TimeSlice  * SegmentType option
+    | GetNumberOfDistinctWebsites of SiteId * TimeSlice  * SegmentType option
+    | GetNumberOfDistinctWebsitesUrls of SiteId * TimeSlice  * SegmentType option
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | GetRefererType(sid,ts,segment,typeReferer,idSubtable,expanded) as t ->  methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                                            + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                                                            + (if (typeReferer.IsSome) then makeParam("typeReferer",typeReferer.Value) else "" )
+                                                                                                            + (if (expanded.IsSome && expanded.Value) then makeParam("expanded",1) else "" ) 
+                                                                                                            + (if (idSubtable.IsSome) then makeParam("idSubtable",idSubtable.Value) else "" )
+                | GetAll(sid,ts,segment) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                        + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                | GetKeywords(sid,ts,segment,expanded) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                        + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                        + (if (expanded.IsSome && expanded.Value) then makeParam("expanded",1) else "" ) 
+                | GetKeywordsForPageUrl(sid,ts,url) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command + makeParam("url",url) 
+                | GetKeywordsForPageTitle(sid,ts,title) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command + makeParam("title",title) 
+                | GetSearchEnginesFromKeywordId(sid,ts,idSubtable,segment)
+                | GetKeywordsFromCampaignId(sid,ts,idSubtable,segment)
+                | GetUrlsFromWebsiteId(sid,ts,idSubtable,segment)
+                | GetKeywordsFromSearchEngineId(sid,ts,idSubtable,segment) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command + makeParam("idSubtable",idSubtable)
+                                                                                                    + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")  
+                | GetSearchEngines(sid,ts,segment,expanded)
+                | GetWebsites(sid,ts,segment,expanded)
+                | GetSocials(sid,ts,segment,expanded)
+                | GetCampaigns(sid,ts,segment,expanded) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                        + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                        + (if (expanded.IsSome && expanded.Value) then makeParam("expanded",1) else "" ) 
+                |GetUrlsForSocial(sid,ts,segment,idSubtable) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                        + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                        + (if (idSubtable.IsSome) then makeParam("idSubtable",idSubtable.Value) else "" ) 
+                | GetNumberOfDistinctSearchEngines (sid,ts,segment)
+                | GetNumberOfDistinctKeywords (sid,ts,segment)
+                | GetNumberOfDistinctCampaigns (sid,ts,segment)
+                | GetNumberOfDistinctWebsites (sid,ts,segment)
+                | GetNumberOfDistinctWebsitesUrls (sid,ts,segment)  as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                                + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                                                                                                                                  
+                                                                         
 and GoalsMethod =
-    | GetGoals //(idSite) [ Example in XML, Json, Tsv (Excel) ]
-    | AddGoal //(idSite, name, matchAttribute, pattern, patternType, caseSensitive = '', revenue = '', allowMultipleConversionsPerVisit = '') [ No example available ]
-    | UpdateGoal //(idSite, idGoal, name, matchAttribute, pattern, patternType, caseSensitive = '', revenue = '', allowMultipleConversionsPerVisit = '') [ No example available ]
-    | DeleteGoal //(idSite, idGoal) [ No example available ]
-    | GetItemsSku //(idSite, period, date, abandonedCarts = '') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
-    | GetItemsName //(idSite, period, date, abandonedCarts = '') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
-    | GetItemsCategory //(idSite, period, date, abandonedCarts = '') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
-    | Get //(idSite, period, date, segment = '', idGoal = '', columns = 'Array') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
-    | GetDaysToConversion //(idSite, period, date, segment = '', idGoal = '') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
-    | GetVisitsUntilConversion //(idSite, period, date, segment = '', idGoal = '') [ Example in XML, Json, Tsv 
+    | GetGoals of SiteId
+    | AddGoal  of SiteId * string * string * string * string * bool option * string option * bool option//(idSite, name, matchAttribute, pattern, patternType, caseSensitive = '', revenue = '', allowMultipleConversionsPerVisit = '') [ No example available ]
+    | UpdateGoal of SiteId * string * string * string * string * string * bool option * string option * bool option//(idSite, idGoal, name, matchAttribute, pattern, patternType, caseSensitive = '', revenue = '', allowMultipleConversionsPerVisit = '') [ No example available ]
+    | DeleteGoal of SiteId * string//(idSite, idGoal) [ No example available ]
+    | GetItemsSku of SiteId * TimeSlice * bool option//(idSite, period, date, abandonedCarts = '') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
+    | GetItemsName of SiteId * TimeSlice * bool option//(idSite, period, date, abandonedCarts = '') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
+    | GetItemsCategory of SiteId * TimeSlice * bool option//(idSite, period, date, abandonedCarts = '') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
+    | Get of SiteId * TimeSlice * SegmentType option * string option * string option//(idSite, period, date, segment = '', idGoal = '', columns = 'Array') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
+    | GetDaysToConversion of SiteId * TimeSlice * SegmentType option * string option//(idSite, period, date, segment = '', idGoal = '') [ Example in XML, Json, Tsv (Excel) ,	RSS of the last 10 days ]
+    | GetVisitsUntilConversion of SiteId * TimeSlice * SegmentType option * string option//(idSite, period, date, segment = '', idGoal = '') [ Example in XML, Json, Tsv 
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | GetGoals (sid)  as t -> methodCmdImpl t + (sid:>ApiParameter).Command
+                | AddGoal (sid, name, matchAttribute, pattern, patternType, caseSensitive , revenue , allowMultipleConversionsPerVisit )as t -> methodCmdImpl t + (sid:>ApiParameter).Command
+                                                                                                                                                                    + (makeParams2 [|("name",name);("matchAttribute",matchAttribute);("pattern",pattern);("patternType",patternType)|])
+                                                                                                                                                                    + (if (caseSensitive.IsSome) then makeParam("caseSensitive",caseSensitive.Value) else "" )
+                                                                                                                                                                    + (if (revenue.IsSome) then makeParam("revenue",revenue.Value) else "" )
+                                                                                                                                                                    + (if (allowMultipleConversionsPerVisit.IsSome) then makeParam("allowMultipleConversionsPerVisit",allowMultipleConversionsPerVisit.Value) else "" )
+                | UpdateGoal (sid, idGoal, name, matchAttribute, pattern, patternType, caseSensitive , revenue , allowMultipleConversionsPerVisit )as t -> methodCmdImpl t + (sid:>ApiParameter).Command
+                                                                                                                                                                    + (makeParams2 [|("idGoal",idGoal);("name",name);("matchAttribute",matchAttribute);("pattern",pattern);("patternType",patternType)|])
+                                                                                                                                                                    + (if (caseSensitive.IsSome) then makeParam("caseSensitive",caseSensitive.Value) else "" )
+                                                                                                                                                                    + (if (revenue.IsSome) then makeParam("revenue",revenue.Value) else "" )
+                                                                                                                                                                    + (if (allowMultipleConversionsPerVisit.IsSome) then makeParam("allowMultipleConversionsPerVisit",allowMultipleConversionsPerVisit.Value) else "" )
+                | DeleteGoal (sid, idGoal)as t -> methodCmdImpl t + (sid:>ApiParameter).Command + makeParam("idGoal",idGoal)
+                | GetItemsSku (sid,ts,abandonedCarts) 
+                | GetItemsName (sid,ts,abandonedCarts) 
+                | GetItemsCategory (sid,ts,abandonedCarts) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                + (if (abandonedCarts.IsSome) then makeParam("abandonedCarts",abandonedCarts) else "" ) 
+                | Get (sid,ts,segment,idGoal,columns) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                                + (if (idGoal.IsSome) then makeParam("idGoal",idGoal.Value) else "" ) 
+                                                                                + (if (columns.IsSome) then makeParam("columns",columns.Value) else "" ) 
+                | GetDaysToConversion (sid,ts,segment,idGoal)
+                | GetVisitsUntilConversion (sid,ts,segment,idGoal) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                                + (if (idGoal.IsSome) then makeParam("idGoal",idGoal.Value) else "" ) 
+                                                                                
+                                                                                
 and UserCountryMethod =
-    | GetCountry
-    | GetContinent
-    | GetRegion
-    | GetCity
-    | GetLocationFromIP
-    | GetNumberOfDistinctCountries
+    | GetCountry of SiteId * TimeSlice * SegmentType option
+    | GetContinent of SiteId * TimeSlice * SegmentType option
+    | GetRegion of SiteId * TimeSlice * SegmentType option
+    | GetCity of SiteId * TimeSlice * SegmentType option
+    | GetLocationFromIP of string * string option
+    | GetNumberOfDistinctCountries of SiteId * TimeSlice * SegmentType option
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | GetCountry (sid,ts,segment)
+                | GetContinent (sid,ts,segment)
+                | GetRegion (sid,ts,segment)
+                | GetNumberOfDistinctCountries (sid,ts,segment)
+                | GetCity (sid,ts,segment) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                | GetLocationFromIP (ip, provider) as t -> methodCmdImpl t + makeParam("ip",ip)
+                                                                                + (if (provider.IsSome) then makeParam("provider",provider.Value) else "" ) 
+                                                                                
 
 and VisitorInterestMethod =
-    | GetNumberOfVisitsPerVisitDuration
-    | GetNumberOfVisitsPerPage
-    | GetNumberOfVisitsByVisitCount
-    | GetNumberOfVisitsByDaysSinceLast
+    | GetNumberOfVisitsPerVisitDuration of SiteId * TimeSlice * SegmentType option
+    | GetNumberOfVisitsPerPage of SiteId * TimeSlice * SegmentType option
+    | GetNumberOfVisitsByVisitCount of SiteId * TimeSlice * SegmentType option
+    | GetNumberOfVisitsByDaysSinceLast of SiteId * TimeSlice * SegmentType option
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | GetNumberOfVisitsPerVisitDuration (sid,ts,segment)
+                | GetNumberOfVisitsPerPage (sid,ts,segment)
+                | GetNumberOfVisitsByVisitCount (sid,ts,segment)
+                | GetNumberOfVisitsByDaysSinceLast (sid,ts,segment) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
 and VisitFrequencyMethod =
-    | Get
+    | Get of SiteId * TimeSlice * SegmentType option * string option
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | Get (sid,ts,segment,columns) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                                + (if (columns.IsSome) then makeParam("columns",columns.Value) else "" ) 
 and ProviderMethod =
-    | GetProvider
+    | GetProvider  of SiteId * TimeSlice * SegmentType option
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | GetProvider(sid,ts,segment) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
 and UserSettingsMethod =
-    | GetResolution
-    | GetBrowser
-    | GetBrowserVersion
-    | GetBrowserType
-    | GetPlugin
-    | GetWideScreen
-    | GetOS
-    | GetConfiguration
-    | GetOSFamily
-    | GetMobileVsDesktop
+    | GetResolution  of SiteId * TimeSlice * SegmentType option
+    | GetBrowser  of SiteId * TimeSlice * SegmentType option
+    | GetBrowserVersion  of SiteId * TimeSlice * SegmentType option
+    | GetBrowserType  of SiteId * TimeSlice * SegmentType option
+    | GetPlugin  of SiteId * TimeSlice * SegmentType option
+    | GetWideScreen  of SiteId * TimeSlice * SegmentType option
+    | GetOS  of SiteId * TimeSlice * SegmentType option *  string option
+    | GetConfiguration  of SiteId * TimeSlice * SegmentType option
+    | GetOSFamily  of SiteId * TimeSlice * SegmentType option
+    | GetMobileVsDesktop  of SiteId * TimeSlice * SegmentType option
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | GetResolution(sid,ts,segment)
+                | GetBrowser(sid,ts,segment)
+                | GetBrowserVersion(sid,ts,segment)
+                | GetBrowserType(sid,ts,segment)
+                | GetPlugin(sid,ts,segment)
+                | GetWideScreen(sid,ts,segment)
+                | GetConfiguration(sid,ts,segment)
+                | GetOSFamily(sid,ts,segment)
+                | GetMobileVsDesktop(sid,ts,segment) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                | GetOS(sid,ts,segment,addShortLabel ) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                                + (if (addShortLabel.IsSome) then makeParam("addShortLabel",addShortLabel.Value) else makeParam("addShortLabel",1) )
+
 and APIMethod =
     | GetPiwikVersion //() 
     | GetSettings //() 
@@ -453,73 +569,180 @@ and APIMethod =
     | GetDefaultMetrics //() 
     | GetDefaultProcessedMetrics //() 
     | GetDefaultMetricsDocumentation //() 
-    | GetSegmentsMetadata //(idSites = 'Array') 
-    | GetLogoUrl //(pathOnly = '') 
-    | GetHeaderLogoUrl //(pathOnly = '') 
-    | GetMetadata //(idSite, apiModule, apiAction, apiParameters = 'Array', language = '', period = '', date = '', hideMetricsDoc = '', showSubtableReports = '')  	 
-    | GetReportMetadata //(idSites = '', period = '', date = '', hideMetricsDoc = '', showSubtableReports = '')  	 
-    | GetProcessedReport //(idSite, period, date, apiModule, apiAction, segment = '', apiParameters = '', idGoal = '', language = '', showTimer = '1', hideMetricsDoc = '', idSubtable = '', showRawMetrics = '')  	 
-    | Get //(idSite, period, date, segment = '', columns = '')  	 
-    | GetRowEvolution //(idSite, period, date, apiModule, apiAction, label = '', segment = '', column = '', language = '', idGoal = '', legendAppendMetric = '1', labelUseAbsoluteUrl = '1')  	 
-    | GetBulkRequest //(urls) 
+    | GetSegmentsMetadata of SiteId option//(idSites = 'Array') 
+    | GetLogoUrl of string option //(pathOnly = '') 
+    | GetHeaderLogoUrl of string option//(pathOnly = '') 
+    | GetMetadata  of SiteId * string * string * string option * string option * TimeSlice option * bool option * bool option//(idSite, apiModule, apiAction, apiParameters = 'Array', language = '', period = '', date = '', hideMetricsDoc = '', showSubtableReports = '')  	 
+    | GetReportMetadata of SiteId option * TimeSlice option * bool option * bool option //(idSites = '', period = '', date = '', hideMetricsDoc = '', showSubtableReports = '')  	 
+    | GetProcessedReport of SiteId * TimeSlice * string * string * SegmentType option * string option * string option * string option * bool option * bool option * string option * bool option //(idSite, period, date, apiModule, apiAction, segment = '', apiParameters = '', idGoal = '', language = '', showTimer = '1', hideMetricsDoc = '', idSubtable = '', showRawMetrics = '')  	 
+    | Get of SiteId * TimeSlice * SegmentType option * string option//(idSite, period, date, segment = '', columns = '')  	 
+    | GetRowEvolution of SiteId * TimeSlice * string * string * string option * SegmentType option * string option * string option * string option * string option * string option//(idSite, period, date, apiModule, apiAction, label = '', segment = '', column = '', language = '', idGoal = '', legendAppendMetric = '1', labelUseAbsoluteUrl = '1')  	 
+    | GetBulkRequest of string//(urls) 
     interface ApiMethod with
         member this.Command =
                 match this with
+                | GetSegmentsMetadata(sid) as t -> methodCmdImpl t +  (if (sid.IsSome) then (sid.Value:>ApiParameter).Command else "")
+                | GetLogoUrl(pathOnly)
+                | GetHeaderLogoUrl(pathOnly)  as t -> methodCmdImpl t + (if (pathOnly.IsSome) then makeParam("pathOnly",pathOnly) else "" )
+                | GetMetadata(sid, apiModule, apiAction, apiParameters, language , ts, hideMetricsDoc, showSubtableReports)  as t -> methodCmdImpl t + (sid:>ApiParameter).Command
+                                                                                                                                             + makeParams2 [|("apiModule",apiModule);("apiAction",apiAction)|]
+                                                                                                                                             + (if (apiParameters.IsSome) then makeParam("apiParameters",apiParameters.Value) else "" )
+                                                                                                                                             + (if (language.IsSome) then makeParam("language",language.Value) else "" )
+                                                                                                                                             + (if (ts.IsSome) then (ts.Value:>ApiParameter).Command else "" )
+                                                                                                                                             + (if (hideMetricsDoc.IsSome) then makeParam("hideMetricsDoc",hideMetricsDoc.Value) else "" )
+                                                                                                                                             + (if (showSubtableReports.IsSome) then makeParam("showSubtableReports",showSubtableReports.Value) else "" )
+                | GetReportMetadata(sid,ts,hideMetricsDoc, showSubtableReports)  as t -> methodCmdImpl t + (if (sid.IsSome) then (sid.Value:>ApiParameter).Command else "" )
+                                                                                                            + (if (ts.IsSome) then (ts.Value:>ApiParameter).Command else "" )
+                                                                                                                                             + (if (hideMetricsDoc.IsSome) then makeParam("hideMetricsDoc",hideMetricsDoc.Value) else "" )
+                                                                                                                                             + (if (showSubtableReports.IsSome) then makeParam("showSubtableReports",showSubtableReports.Value) else "" )
+                | GetProcessedReport(sid, ts, apiModule, apiAction, segment ,
+                                        apiParameters , idGoal , language ,
+                                        showTimer , hideMetricsDoc , idSubtable , showRawMetrics) as t -> methodCmdImpl t + (sid:>ApiParameter).Command
+                                                                                                                          + (ts:>ApiParameter).Command 
+                                                                                                                           + makeParams2 [|("apiModule",apiModule);("apiAction",apiAction)|]
+                                                                                                                           + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                                                                            + (if (apiParameters.IsSome) then makeParam("apiParameters",apiParameters.Value) else "" )
+                                                                                                                             + (if (idGoal.IsSome) then makeParam("idGoal",idGoal.Value) else "" )
+                                                                                                                             + (if (language.IsSome) then makeParam("language",language.Value) else "" )
+                                                                                                                             + (if (showTimer.IsSome) then makeParam("showTimer",showTimer.Value) else makeParam("showTimer",1)  )
+                                                                                                                              + (if (hideMetricsDoc.IsSome) then makeParam("hideMetricsDoc",hideMetricsDoc.Value) else "" )
+                                                                                                                               + (if (idSubtable.IsSome) then makeParam("idSubtable",idSubtable.Value) else "" )
+                                                                                                                               + (if (showRawMetrics.IsSome) then makeParam("showRawMetrics",showRawMetrics.Value) else "" )
+                                                                                                                            
+                | Get(sid, ts, segment , columns)as t -> methodCmdImpl t + (sid:>ApiParameter).Command  + (ts:>ApiParameter).Command 
+                                                                          + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                           + (if (columns.IsSome) then makeParam("columns",columns.Value) else "" ) 
+                | GetRowEvolution(sid, ts, apiModule, apiAction,
+                                     label , segment , column , language ,
+                                      idGoal , legendAppendMetric, labelUseAbsoluteUrl) as t -> methodCmdImpl t  + (sid:>ApiParameter).Command  + (ts:>ApiParameter).Command 
+                                                                                                                  + makeParams2 [|("apiModule",apiModule);("apiAction",apiAction)|] 
+                                                                                                                   + (if (label.IsSome) then makeParam("label",label.Value) else "" )
+                                                                                                                    + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "")
+                                                                                                                     + (if (column.IsSome) then makeParam("column",column.Value) else "" )
+                                                                                                                      + (if (language.IsSome) then makeParam("language",language.Value) else "" )
+                                                                                                                       + (if (idGoal.IsSome) then makeParam("idGoal",idGoal.Value) else "" )
+                                                                                                                        + (if (legendAppendMetric.IsSome) then makeParam("legendAppendMetric",legendAppendMetric.Value) else makeParam("legendAppendMetric",1))
+                                                                                                                         + (if (labelUseAbsoluteUrl.IsSome) then makeParam("labelUseAbsoluteUrl",labelUseAbsoluteUrl.Value) else makeParam("labelUseAbsoluteUrl",1) )
+                                                                                                                                                                                                                            
+                | GetBulkRequest(urls) as t -> methodCmdImpl t + makeParam("urls",urls)
                 | _ as t -> methodCmdImpl t 
 and SitesManagerMethod =
-    | GetJavascriptTag //(idSite, piwikUrl = '') 
-    | GetSitesFromGroup //(group) 
+    | GetJavascriptTag of SiteId * string option //(idSite, piwikUrl = '') 
+    | GetSitesFromGroup of string//(group) 
     | GetSitesGroups// () 
-    | GetSiteFromId //(idSite) 
-    | GetSiteUrlsFromId //(idSite) 
+    | GetSiteFromId of SiteId//(idSite) 
+    | GetSiteUrlsFromId of SiteId//(idSite) 
     | GetAllSites //() 
     | GetAllSitesId //() 
-    | GetSitesIdWithVisits //(timestamp = '') 
+    | GetSitesIdWithVisits of DateTime option//(timestamp = '') 
     | GetSitesWithAdminAccess //() 
     | GetSitesWithViewAccess //() 
-    | GetSitesWithAtLeastViewAccess// (limit = '') 
+    | GetSitesWithAtLeastViewAccess of int option// (limit = '') 
     | GetSitesIdWithAdminAccess //() 
     | GetSitesIdWithViewAccess //() 
     | GetSitesIdWithAtLeastViewAccess// () 
-    | GetSitesIdFromSiteUrl //(url) 
-    | AddSite //(siteName, urls, ecommerce = '', siteSearch = '', searchKeywordParameters = '', searchCategoryParameters = '', excludedIps = '', excludedQueryParameters = '', timezone = '', currency = '', group = '', startDate = '', excludedUserAgents = '') 
-    | DeleteSite // (idSite) 
-    | AddSiteAliasUrls //(idSite, urls) 
-    | GetIpsForRange //(ipRange) 
-    | SetGlobalExcludedIps //(excludedIps) 
-    | SetGlobalSearchParameters //(searchKeywordParameters, searchCategoryParameters) 
+    | GetSitesIdFromSiteUrl of string //(url) 
+    | AddSite of string * string * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option //(siteName, urls, ecommerce = '', siteSearch = '', searchKeywordParameters = '', searchCategoryParameters = '', excludedIps = '', excludedQueryParameters = '', timezone = '', currency = '', group = '', startDate = '', excludedUserAgents = '') 
+    | DeleteSite of SiteId// (idSite) 
+    | AddSiteAliasUrls of SiteId * string //(idSite, urls) 
+    | GetIpsForRange of string//(ipRange) 
+    | SetGlobalExcludedIps of string //(excludedIps) 
+    | SetGlobalSearchParameters of string *  string//(searchKeywordParameters, searchCategoryParameters) 
     | GetSearchKeywordParametersGlobal // () 
     | GetSearchCategoryParametersGlobal //() 
     | GetExcludedQueryParametersGlobal //() 
     | GetExcludedUserAgentsGlobal //() 
-    | SetGlobalExcludedUserAgents //(excludedUserAgents) 
+    | SetGlobalExcludedUserAgents of string //(excludedUserAgents) 
     | IsSiteSpecificUserAgentExcludeEnabled //() 
-    | SetSiteSpecificUserAgentExcludeEnabled //(enabled) 
-    | SetGlobalExcludedQueryParameters //(excludedQueryParameters) 
+    | SetSiteSpecificUserAgentExcludeEnabled of string //(enabled) 
+    | SetGlobalExcludedQueryParameters of string//(excludedQueryParameters) 
     | GetExcludedIpsGlobal //() 
     | GetDefaultCurrency //() 
-    | SetDefaultCurrency //(defaultCurrency) 
+    | SetDefaultCurrency of string //(defaultCurrency) 
     | GetDefaultTimezone //() 
     | SetDefaultTimezone //(defaultTimezone) 
-    | UpdateSite //(idSite, siteName, urls = '', ecommerce = '', siteSearch = '', searchKeywordParameters = '', searchCategoryParameters = '', excludedIps = '', excludedQueryParameters = '', timezone = '', currency = '', group = '', startDate = '', excludedUserAgents = '') 
+    | UpdateSite of SiteId * string * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option//(idSite, siteName, urls = '', ecommerce = '', siteSearch = '', searchKeywordParameters = '', searchCategoryParameters = '', excludedIps = '', excludedQueryParameters = '', timezone = '', currency = '', group = '', startDate = '', excludedUserAgents = '') 
     | GetCurrencyList //() 
     | GetCurrencySymbols// () 
     | GetTimezonesList //() 
     | GetUniqueSiteTimezones// () 
-    | GetPatternMatchSites //(pattern) 
+    | GetPatternMatchSites of string //(pattern) 
     interface ApiMethod with
         member this.Command =
                 match this with
+                | GetJavascriptTag(sid, piwikUrl) as t -> methodCmdImpl t + (sid:>ApiParameter).Command  +  (if (piwikUrl.IsSome) then makeParam("piwikUrl",piwikUrl.Value) else "" )
+                | GetSitesFromGroup(group) as t -> methodCmdImpl t + makeParam("group",group)
+                | GetSiteFromId(sid) | GetSiteUrlsFromId(sid)|DeleteSite(sid) as t -> methodCmdImpl t + (sid:>ApiParameter).Command
+                | GetSitesIdWithVisits (timestamp) as t -> methodCmdImpl t +  (if (timestamp.IsSome) then makeParam("timestamp",getUNIXTimeStamp timestamp.Value) else "" )
+                | GetSitesWithAtLeastViewAccess (limit) as t -> methodCmdImpl t +  (if (limit.IsSome) then makeParam("limit",limit.Value) else "" )
+                | GetSitesIdFromSiteUrl (url) as t -> methodCmdImpl t + makeParam("url",url)
+                | AddSite (siteName, urls, ecommerce,
+                           siteSearch, searchKeywordParameters ,
+                           searchCategoryParameters , excludedIps ,
+                           excludedQueryParameters , timezone,
+                           currency , group, startDate, excludedUserAgents,keepURLFragments ) as t -> methodCmdImpl t + makeParams2 [|("siteName",siteName);("urls",urls)|]
+                                                                                                                          +  (if (ecommerce.IsSome) then makeParam("ecommerce",ecommerce.Value) else "" )
+                                                                                                                          +  (if (siteSearch.IsSome) then makeParam("siteSearch",siteSearch.Value) else "" )
+                                                                                                                          +  (if (searchKeywordParameters.IsSome) then makeParam("searchKeywordParameters",searchKeywordParameters.Value) else "" )
+                                                                                                                          +  (if (searchCategoryParameters.IsSome) then makeParam("searchCategoryParameters",searchCategoryParameters.Value) else "" )
+                                                                                                                          +  (if (excludedIps.IsSome) then makeParam("excludedIps",excludedIps.Value) else "" )
+                                                                                                                          +  (if (excludedQueryParameters.IsSome) then makeParam("excludedQueryParameters",excludedQueryParameters.Value) else "" )
+                                                                                                                          +  (if (timezone.IsSome) then makeParam("timezone",timezone.Value) else "" )
+                                                                                                                          +  (if (currency.IsSome) then makeParam("currency",currency.Value) else "" )
+                                                                                                                          +  (if (group.IsSome) then makeParam("group",group.Value) else "" )
+                                                                                                                          +  (if (startDate.IsSome) then makeParam("startDate",startDate.Value) else "" )
+                                                                                                                          +  (if (excludedUserAgents.IsSome) then makeParam("excludedUserAgents",excludedUserAgents.Value) else "" )
+                                                                                                                          +  (if (keepURLFragments.IsSome) then makeParam("keepURLFragments",keepURLFragments.Value) else makeParam("keepURLFragments",0) )
+                | AddSiteAliasUrls(sid, urls)  as t -> methodCmdImpl t  + (sid:>ApiParameter).Command + makeParam("urls",urls)
+                | GetIpsForRange (ipRange) as t -> methodCmdImpl t + makeParam("ipRange",ipRange)
+                | SetGlobalExcludedIps (excludedIps)  as t -> methodCmdImpl t + makeParam("excludedIps",excludedIps)
+                | SetGlobalSearchParameters (searchKeywordParameters, searchCategoryParameters) as t -> methodCmdImpl t + makeParams2 [|("searchKeywordParameters",searchKeywordParameters);("searchCategoryParameters",searchCategoryParameters)|]
+                | SetGlobalExcludedUserAgents (excludedUserAgents) as t -> methodCmdImpl t + makeParam("excludedUserAgents",excludedUserAgents)
+                | SetSiteSpecificUserAgentExcludeEnabled (enabled) as t -> methodCmdImpl t + makeParam("enabled",enabled)
+                | SetGlobalExcludedQueryParameters (excludedQueryParameters)  as t -> methodCmdImpl t + makeParam("excludedQueryParameters",excludedQueryParameters)
+                | SetDefaultCurrency (defaultCurrency)  as t -> methodCmdImpl t + makeParam("defaultCurrency",defaultCurrency)
+                | GetPatternMatchSites (pattern)  as t -> methodCmdImpl t + makeParam("pattern",pattern)
+                | UpdateSite(sid, siteName, urls, ecommerce ,
+                                 siteSearch, searchKeywordParameters,
+                                  searchCategoryParameters, excludedIps,
+                                  excludedQueryParameters, timezone , 
+                                  currency , group , startDate , excludedUserAgents,keepURLFragments)  as t -> methodCmdImpl t + (sid:>ApiParameter).Command + makeParam("siteName",siteName)
+                                                                                                                                  +  (if (urls.IsSome) then makeParam("urls",urls.Value) else "" )
+                                                                                                                                  +  (if (ecommerce.IsSome) then makeParam("ecommerce",ecommerce.Value) else "" )
+                                                                                                                                  +  (if (siteSearch.IsSome) then makeParam("siteSearch",siteSearch.Value) else "" )
+                                                                                                                                  +  (if (searchKeywordParameters.IsSome) then makeParam("searchKeywordParameters",searchKeywordParameters.Value) else "" )
+                                                                                                                                  +  (if (searchCategoryParameters.IsSome) then makeParam("searchCategoryParameters",searchCategoryParameters.Value) else "" )
+                                                                                                                                  +  (if (excludedIps.IsSome) then makeParam("excludedIps",excludedIps.Value) else "" )
+                                                                                                                                  +  (if (excludedQueryParameters.IsSome) then makeParam("excludedQueryParameters",excludedQueryParameters.Value) else "" )
+                                                                                                                                  +  (if (timezone.IsSome) then makeParam("timezone",timezone.Value) else "" )
+                                                                                                                                  +  (if (currency.IsSome) then makeParam("currency",currency.Value) else "" )
+                                                                                                                                  +  (if (group.IsSome) then makeParam("group",group.Value) else "" )
+                                                                                                                                  +  (if (startDate.IsSome) then makeParam("startDate",startDate.Value) else "" )
+                                                                                                                                  +  (if (excludedUserAgents.IsSome) then makeParam("excludedUserAgents",excludedUserAgents.Value) else "" )
+                                                                                                                                  +  (if (keepURLFragments.IsSome) then makeParam("keepURLFragments",keepURLFragments.Value) else makeParam("keepURLFragments",0) )
                 | _ as t -> methodCmdImpl t 
 
 and AnnotationsMethod =
-    | Add //(idSite, date, note, starred = '0') 
-    | Save //(idSite, idNote, date = '', note = '', starred = '') 
-    | Delete //(idSite, idNote) 
-    | Get //(idSite, idNote) 
-    | GetAll //(idSite, date = '', period = 'day', lastN = '')  	 
-    | GetAnnotationCountForDates //(idSite, date, period, lastN = '', getAnnotationText = '')  	 
+    | Add  of SiteId * DateTime * string * string option//(idSite, date, note, starred = '0') 
+    | Save of SiteId * string * DateTime option * string option * string option//(idSite, idNote, date = '', note = '', starred = '') 
+    | Delete of SiteId * string //(idSite, idNote) 
+    | Get of SiteId * string //(idSite, idNote) 
+    | GetAll of SiteId * TimeSlice * string option//(idSite, date = '', period = 'day', lastN = '')  	 
+    | GetAnnotationCountForDates of SiteId * TimeSlice * string option * string option//(idSite, date, period, lastN = '', getAnnotationText = '')  	 
     interface ApiMethod with
         member this.Command =
                 match this with
-                | _ as t -> methodCmdImpl t 
+                | Add  (sid, date, note, starred )  as t -> methodCmdImpl t + (sid:>ApiParameter).Command
+                                                                            + makeParam("date",date.ToString("yyyy-MM-dd"))
+                                                                             + makeParam("note",note)
+                                                                              +  (if (starred.IsSome) then makeParam("starred",starred.Value) else makeParam("starred",0) )
+                | Save(sid, idNote, date , note, starred ) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + makeParam("idNote",idNote)
+                                                                            +  (if (date.IsSome) then makeParam("date",date.Value.ToString("yyyy-MM-dd")) else "")
+                                                                             +  (if (note.IsSome) then makeParam("note",note.Value) else "" )
+                                                                              +  (if (starred.IsSome) then makeParam("starred",starred.Value) else makeParam("starred",0) )
+                | Get(sid, idNote) | Delete(sid, idNote) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + makeParam("idNote",idNote)
+                | GetAll(sid, ts, lastN) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                     +  (if (lastN.IsSome) then makeParam("lastN",lastN.Value) else "" )
+                | GetAnnotationCountForDates(sid, ts, lastN,getAnnotationText) as t -> methodCmdImpl t + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
+                                                                                                        +  (if (lastN.IsSome) then makeParam("lastN",lastN.Value) else "" )
+                                                                                                        +  (if (getAnnotationText.IsSome) then makeParam("getAnnotationText",getAnnotationText.Value) else "" )
