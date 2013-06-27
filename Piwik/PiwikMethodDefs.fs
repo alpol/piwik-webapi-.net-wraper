@@ -226,20 +226,21 @@ and MobileMessagingMethod =
                 | SetDelegatedManagement (delegatedManagement) as t -> methodCmdImpl t + makeParam("delegatedManagement",delegatedManagement)
 and LiveMethod =
     | GetCounters  of SiteId * int * SegmentType option
-    | GetLastVisitsDetails of SiteId * TimeSlice * SegmentType option  * int option * int option * DateTime option 
+    | GetLastVisitsDetails of SiteId * TimeSlice * SegmentType option  * int option * int option * DateTime option * string option * string option 
     interface ApiMethod with
         member this.Command =
                 match this with
                 | GetCounters (idSite, lastMinutes, segment) as t -> methodCmdImpl t + makeParam("lastMinutes",lastMinutes)
                                                                          + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "") 
                                                                      
-                | GetLastVisitsDetails (sid, ts, segment, filter_limit , maxIdVisit , minTimestamp ) as t -> methodCmdImpl t 
-                                                                                                            + ( makeParams [|sid:>ApiParameter; ts:>ApiParameter|])
-                                                                                                            + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "") 
-                                                                                                            + (if (filter_limit.IsSome) then makeParam("filter_limit",filter_limit.Value) else "" )
-                                                                                                            + (if (maxIdVisit.IsSome) then makeParam("maxIdVisit",maxIdVisit.Value) else "" )
-                                                                                                            + (if (minTimestamp.IsSome) then makeParam("minTimestamp",getUNIXTimeStamp minTimestamp.Value) else "" )
-
+                | GetLastVisitsDetails (sid, ts, segment, filter_limit , filter_offset , minTimestamp, flat, doNotFetchActions ) as t -> (methodCmdImpl t) 
+                                                                                                                                        + ( makeParams [|sid:>ApiParameter; ts:>ApiParameter|])
+                                                                                                                                        + (if (segment.IsSome) then (segment.Value:>ApiParameter).Command else "") 
+                                                                                                                                        + (if (filter_limit.IsSome) then makeParam("filter_limit",filter_limit.Value) else "" )
+                                                                                                                                        + (if (filter_offset.IsSome) then makeParam("filter_offset",filter_offset.Value) else "" )
+                                                                                                                                        + (if (minTimestamp.IsSome) then makeParam("minTimestamp",getUNIXTimeStamp minTimestamp.Value) else "" )
+                                                                                                                                        + (if (flat.IsSome) then makeParam("flat",flat.Value) else "" )
+                                                                                                                                        + (if (doNotFetchActions.IsSome) then makeParam("doNotFetchActions",doNotFetchActions.Value) else "" )
 and LanguagesManagerMethod =
     | IsLanguageAvailable of string
     | GetAvailableLanguages 

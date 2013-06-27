@@ -19,7 +19,7 @@ let authToken = t.[1]
 let getOne () =
     let startDay = DateTime.Now.AddDays -5.0
     let endDay  = DateTime.Now
-    let apiCall =  serviceUri |> start |>  addAuth authToken |>  addFormat FormatType.Csv |> addPeriod (TimeSlice.Date(endDay,PeriodType.Day))
+    let apiCall =  serviceUri |> start |>  addAuth authToken |>  addFormat FormatType.Csv 
                     |> addMethod (PiwikMethodDefs.MultiSites (PiwikMethodDefs.MultiSitesMethod.GetOne( (SiteId.Single 2),(TimeSlice.Date(endDay,PeriodType.Week)),None,None)))
                     //|> addSegment (Segments([(VisitLocationCity(Equals,"Boston"),Or)], VisitLocationProvider(Equals,"comcast.net")))
                     //|> addParameter("label","veterans")

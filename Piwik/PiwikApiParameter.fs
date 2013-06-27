@@ -116,17 +116,44 @@ type SegmentDemention =
     | VisitLocationRegion of SegmentOperator * string
     | CustomVariable of int * string * string
     | CustomVariablePage of int * string * string
+    | VisitBrowser of SegmentOperator * string
+    | VisitBrowserVersion of SegmentOperator * double
+    | VisitDeviceType of SegmentOperator * string
+    | VisitLocalHour of SegmentOperator * int
+    | VisitOS of SegmentOperator * string
+    | VisitResolution of SegmentOperator * string
+    | VisitServerHour of SegmentOperator * int
+    | VisitEcommerceStatus of SegmentOperator * string
+    | VisitConvertedGoalId of SegmentOperator * int
+    | VisitConverted of SegmentOperator * bool
+    | VisitVisitorId of SegmentOperator * int
+    | VisitVisitorIp of SegmentOperator * string
+    | VisitVisitorType of SegmentOperator * string
+
     member this.Command =
         match this with
         |VisitLocationCity(op,var) -> String.Format("city{0}{1}", op.Command, var)
-        |VisitLocationContinent(op,var) -> String.Format("continent{0}{1}", op.Command, var.Command)
-        |VisitLocationCountry(op,var) -> String.Format("country{0}{1}", op.Command, var)
-        |VisitLocationLat(op,var) -> String.Format("lat{0}{1}", op.Command, var)
-        |VisitLocationLong(op,var) -> String.Format("long{0}{1}", op.Command, var)
+        |VisitLocationContinent(op,var) -> String.Format("continentCode{0}{1}", op.Command, var.Command)
+        |VisitLocationCountry(op,var) -> String.Format("countryCode{0}{1}", op.Command, var)
+        |VisitLocationLat(op,var) -> String.Format("latitude{0}{1}", op.Command, var)
+        |VisitLocationLong(op,var) -> String.Format("longitude{0}{1}", op.Command, var)
         |VisitLocationProvider(op,var) -> String.Format("provider{0}{1}", op.Command, var)
-        |VisitLocationRegion(op,var) -> String.Format("region{0}{1}", op.Command, var)
+        |VisitLocationRegion(op,var) -> String.Format("regionCode{0}{1}", op.Command, var)
         |CustomVariable(cnt,name,value) -> String.Format("customVariableName{0}=={1};customVariableValue{0}=={2}",cnt,name,value)
         |CustomVariablePage(cnt,name,value) -> String.Format("customVariablePageName{0}=={1};customVariablePageValue{0}=={2}",cnt,name,value)
+        |VisitBrowser (op,var) -> String.Format("city{0}{1}", op.Command, var)
+        |VisitBrowserVersion (op,var) -> String.Format("city{0}{1}", op.Command, var)
+        |VisitDeviceType (op,var) -> String.Format("city{0}{1}", op.Command, var)
+        |VisitLocalHour (op,var) -> String.Format("city{0}{1}", op.Command, var)
+        |VisitOS (op,var) -> String.Format("city{0}{1}", op.Command, var)
+        |VisitResolution (op,var) -> String.Format("city{0}{1}", op.Command, var)
+        |VisitServerHour (op,var) -> String.Format("city{0}{1}", op.Command, var)
+        |VisitEcommerceStatus (op,var) -> String.Format("city{0}{1}", op.Command, var)
+        |VisitConvertedGoalId (op,var) -> String.Format("city{0}{1}", op.Command, var)
+        |VisitConverted (op,var) -> String.Format("city{0}{1}", op.Command, if var then 1 else 0)
+        |VisitVisitorId (op,var) -> String.Format("city{0}{1}", op.Command, var)
+        |VisitVisitorIp (op,var) -> String.Format("city{0}{1}", op.Command, var)
+        |VisitVisitorType (op,var) -> String.Format("city{0}{1}", op.Command, var)
 
 
 and Continents =

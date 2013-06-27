@@ -61,10 +61,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PiwikCallBuilderTests.fs" />
-    <None Include="Script.fsx" />
     <None Include="packages.config" />
     <None Include="app.config" />
+    <Compile Include="PiwikCallBuilderTests.fs" />
     <Compile Include="PiwikCallBuilderAddPeriodTests.fs" />
     <Compile Include="TimeSlisceTests.fs" />
     <Compile Include="AddMethodTests.fs" />

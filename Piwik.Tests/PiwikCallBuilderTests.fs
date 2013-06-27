@@ -10,6 +10,45 @@ let apiUri ="test.com"
 let contains (testFor:string) (result:string)= result.Contains(testFor)
 
 [<Fact>]
+let ``addParameter param val should add &param=val to uri`` () =
+    apiUri |> addParameter ("param", "val") |> contains "&param=val" |> should be True
+
+[<Fact>]
+let ``addParameter (param,val) twice  should fail`` () =
+    try
+        apiUri |> addParameter ("param", "val") |> addParameter ("param", "val") |> ignore 
+        true |> should be False |> ignore
+    with
+    | ParameterDuplicationException(p, v) ->
+                        p |> should equal "param"
+                        v |> should equal "val"
+[<Fact>]
+let ``addParam param val should add val.Command to uri`` () =
+    apiUri |> addParam({ 
+                                new ApiParameter with
+                                    member this.Command="&testName=testCommand"
+                                    member this.Name ="testName"
+                                }) |> contains "&testName=testCommand" |> should be True
+
+[<Fact>]
+let ``addParam param twice shoul fail`` () =
+    try
+        apiUri |> addParam({ 
+                                new ApiParameter with
+                                    member this.Command="&testName=testCommand"
+                                    member this.Name ="testName"
+                                }) 
+                                |> addParam({ 
+                                                new ApiParameter with
+                                                    member this.Command="&testName=testCommand"
+                                                    member this.Name ="testName"
+                                })  |> ignore
+
+    with
+    | ParameterDuplicationException(p, v) ->
+                        p |> should equal "testName"
+                        v |> should equal "testCommand"                          
+[<Fact>]
 let ``start should add ?module=API `` () =
     start "test.com" |> contains "?module=API" |> should be True
 
@@ -40,17 +79,3 @@ let ``addSite twice  should fail`` () =
                         v |> should equal "all"
                         
 
-[<Fact>]
-let ``addParameter param val should add &param=val to uri`` () =
-    apiUri |> addParameter ("param", "val") |> contains "&param=val" |> should be True
-
-[<Fact>]
-let ``addParameter (param,val) twice  should fail`` () =
-    try
-        apiUri |> addParameter ("param", "val") |> addParameter ("param", "val") |> ignore 
-        true |> should be False |> ignore
-    with
-    | ParameterDuplicationException(p, v) ->
-                        p |> should equal "param"
-                        v |> should equal "val"
-                        
