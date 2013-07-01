@@ -141,19 +141,19 @@ type SegmentDemention =
         |VisitLocationRegion(op,var) -> String.Format("regionCode{0}{1}", op.Command, var)
         |CustomVariable(cnt,name,value) -> String.Format("customVariableName{0}=={1};customVariableValue{0}=={2}",cnt,name,value)
         |CustomVariablePage(cnt,name,value) -> String.Format("customVariablePageName{0}=={1};customVariablePageValue{0}=={2}",cnt,name,value)
-        |VisitBrowser (op,var) -> String.Format("city{0}{1}", op.Command, var)
-        |VisitBrowserVersion (op,var) -> String.Format("city{0}{1}", op.Command, var)
-        |VisitDeviceType (op,var) -> String.Format("city{0}{1}", op.Command, var)
-        |VisitLocalHour (op,var) -> String.Format("city{0}{1}", op.Command, var)
-        |VisitOS (op,var) -> String.Format("city{0}{1}", op.Command, var)
-        |VisitResolution (op,var) -> String.Format("city{0}{1}", op.Command, var)
-        |VisitServerHour (op,var) -> String.Format("city{0}{1}", op.Command, var)
-        |VisitEcommerceStatus (op,var) -> String.Format("city{0}{1}", op.Command, var)
-        |VisitConvertedGoalId (op,var) -> String.Format("city{0}{1}", op.Command, var)
-        |VisitConverted (op,var) -> String.Format("city{0}{1}", op.Command, if var then 1 else 0)
-        |VisitVisitorId (op,var) -> String.Format("city{0}{1}", op.Command, var)
-        |VisitVisitorIp (op,var) -> String.Format("city{0}{1}", op.Command, var)
-        |VisitVisitorType (op,var) -> String.Format("city{0}{1}", op.Command, var)
+        |VisitBrowser (op,var) -> String.Format("browserCode{0}{1}", op.Command, var)
+        |VisitBrowserVersion (op,var) -> String.Format("browserVersion{0}{1}", op.Command, var)
+        |VisitDeviceType (op,var) -> String.Format("deviceType{0}{1}", op.Command, var)
+        |VisitLocalHour (op,var) -> String.Format("visitLocalHour{0}{1}", op.Command, var)
+        |VisitOS (op,var) -> String.Format("operatingSystemCode{0}{1}", op.Command, var)
+        |VisitResolution (op,var) -> String.Format("resolution{0}{1}", op.Command, var)
+        |VisitServerHour (op,var) -> String.Format("visitServerHour{0}{1}", op.Command, var)
+        |VisitEcommerceStatus (op,var) -> String.Format("visitEcommerceStatus{0}{1}", op.Command, var)
+        |VisitConvertedGoalId (op,var) -> String.Format("visitConvertedGoalId{0}{1}", op.Command, var)
+        |VisitConverted (op,var) -> String.Format("visitConverted{0}{1}", op.Command, if var then 1 else 0)
+        |VisitVisitorId (op,var) -> String.Format("visitorId{0}{1}", op.Command, var)
+        |VisitVisitorIp (op,var) -> String.Format("visitIp{0}{1}", op.Command, var)
+        |VisitVisitorType (op,var) -> String.Format("visitorType{0}{1}", op.Command, var)
 
 
 and Continents =
@@ -179,6 +179,7 @@ type SegmentType =
             | Segment(d)    -> String.Format(@"&{0}={1}",(this:>ApiParameter).Name, d.Command)
             | Segments(ds,d)-> (ds|> List.fold((fun s e -> s + (fst e).Command + (snd e).Command)) "&segment=" ) + d.Command
         member this.Name = "segment"
+
 type SiteId =
     | Single    of int
     | Many      of int[]

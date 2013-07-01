@@ -19,7 +19,7 @@ let addLable (lable:string) (uri:string) = uri |> addParam (Lable lable)
 
 let addSite (sites:SiteId) (uri:string) = uri |> addParam sites
 
-let addPeriod (pType:TimeSlice)  (uri:string) = uri |> addParam pType
+let addPeriod (pType:TimeSlice) (uri:string) = uri |> addParam pType
  
 let addFormat (format:FormatType) (uri:string) = uri |> addParam format
 
@@ -38,6 +38,8 @@ let disableQueuedFilters (uri:string) = addParameter ("disable_queued_filters","
 let addIdSubtable (id:int)(uri:string) = addParameter("idSubtable", id.ToString()) uri 
 
 let addEnhanced (uri:string) = addParameter("enhanced", "true") uri 
+
+ 
 
 let execute (apiCall:string) =
     let webCl = new System.Net.WebClient()

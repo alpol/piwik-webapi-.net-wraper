@@ -6,6 +6,7 @@ open System
 let private makeParam2 p = (p:>ApiParameter).Command 
 let private makeParams p = p |> Seq.fold (fun s e -> s + (makeParam2 e) ) ""
 let private makeParam (n, v) = String.Format(@"&{0}={1}",  n, v) 
+let private makeParam3 (n, v) = snd( v |> Seq.fold( fun s e -> ( fst(s) + 1 , snd(s) + String.Format(@"&{0}[2]={1}",  n, e, fst(s) + 1 )))(-1,""))
 let private makeParams2 p = p |> Seq.fold(fun s e -> s + (makeParam e))""
 let private methodCmdImpl t = (fst( Reflection.FSharpValue.GetUnionFields(t,t.GetType()))).Name |> fun s -> s.Substring(0,1).ToLower() + s.Substring(1)
 let private methodTypeCmdImpl o m s = String.Format("&{0}={1}", (o :> ApiParameter).Name, s + "." + (m :> ApiMethod).Command ) 
@@ -98,8 +99,7 @@ and UsersManagerMethod =
                 | GetUsersLogin as t -> methodCmdImpl t
                 | GetUsersSitesFromAccess(access) as t -> (methodCmdImpl t) + makeParam("access",access)
                 | GetUsersAccessFromSite(siteId) as t -> (methodCmdImpl t) + (siteId:>ApiParameter).Command 
-                | GetUsersWithSiteAccess (siteId,access) as t -> (methodCmdImpl t) + (siteId:>ApiParameter).Command
-                                                                 + makeParam("access",access)  
+                | GetUsersWithSiteAccess (siteId,access) as t -> (methodCmdImpl t) + (siteId:>ApiParameter).Command + makeParam("access",access)  
                 | GetSitesAccessFromUser (userLogin) as t -> (methodCmdImpl t) + makeParam("userLogin",userLogin)
                 | GetUser (userLogin) as t -> (methodCmdImpl t) + makeParam("userLogin",userLogin)
                 | GetUserByEmail (userEmail) as t -> (methodCmdImpl t) + makeParam("userEmail",userEmail)
@@ -318,7 +318,7 @@ and VisitsSummaryMethod =
         member this.Command =
                 match this with
                 | Get as t -> methodCmdImpl t 
-                |GetVisits (sid,ts,segment) | GetUniqueVisitors (sid,ts,segment) | GetActions  (sid,ts,segment)
+                | GetVisits (sid,ts,segment) | GetUniqueVisitors (sid,ts,segment) | GetActions  (sid,ts,segment)
                 | GetMaxActions (sid,ts,segment)| GetBounceCount (sid,ts,segment)
                 | GetVisitsConverted  (sid,ts,segment)| GetSumVisitsLength (sid,ts,segment)
                 | GetSumVisitsLengthPretty (sid,ts,segment) as t -> (methodCmdImpl t) + (sid:>ApiParameter).Command + (ts:>ApiParameter).Command
@@ -644,8 +644,10 @@ and SitesManagerMethod =
     | GetSitesIdWithAtLeastViewAccess// () 
     | GetSitesIdFromSiteUrl of string //(url) 
     | AddSite of string * string * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option //(siteName, urls, ecommerce = '', siteSearch = '', searchKeywordParameters = '', searchCategoryParameters = '', excludedIps = '', excludedQueryParameters = '', timezone = '', currency = '', group = '', startDate = '', excludedUserAgents = '') 
+    | AddSite2 of string * seq<string> * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option //(siteName, urls, ecommerce = '', siteSearch = '', searchKeywordParameters = '', searchCategoryParameters = '', excludedIps = '', excludedQueryParameters = '', timezone = '', currency = '', group = '', startDate = '', excludedUserAgents = '') 
     | DeleteSite of SiteId// (idSite) 
-    | AddSiteAliasUrls of SiteId * string //(idSite, urls) 
+    | AddSiteAliasUrls of SiteId * string //(idSite, urls)
+    | AddSiteAliasUrls2 of SiteId * seq<string> //(idSite, urls)  
     | GetIpsForRange of string//(ipRange) 
     | SetGlobalExcludedIps of string //(excludedIps) 
     | SetGlobalSearchParameters of string *  string//(searchKeywordParameters, searchCategoryParameters) 
@@ -663,6 +665,7 @@ and SitesManagerMethod =
     | GetDefaultTimezone //() 
     | SetDefaultTimezone //(defaultTimezone) 
     | UpdateSite of SiteId * string * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option//(idSite, siteName, urls = '', ecommerce = '', siteSearch = '', searchKeywordParameters = '', searchCategoryParameters = '', excludedIps = '', excludedQueryParameters = '', timezone = '', currency = '', group = '', startDate = '', excludedUserAgents = '') 
+    | UpdateSite2 of SiteId * string * seq<string> option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option * string option//(idSite, siteName, urls = '', ecommerce = '', siteSearch = '', searchKeywordParameters = '', searchCategoryParameters = '', excludedIps = '', excludedQueryParameters = '', timezone = '', currency = '', group = '', startDate = '', excludedUserAgents = '') 
     | GetCurrencyList //() 
     | GetCurrencySymbols// () 
     | GetTimezonesList //() 
@@ -677,11 +680,11 @@ and SitesManagerMethod =
                 | GetSitesIdWithVisits (timestamp) as t -> methodCmdImpl t +  (if (timestamp.IsSome) then makeParam("timestamp",getUNIXTimeStamp timestamp.Value) else "" )
                 | GetSitesWithAtLeastViewAccess (limit) as t -> methodCmdImpl t +  (if (limit.IsSome) then makeParam("limit",limit.Value) else "" )
                 | GetSitesIdFromSiteUrl (url) as t -> methodCmdImpl t + makeParam("url",url)
-                | AddSite (siteName, urls, ecommerce,
+                | AddSite(siteName, url, ecommerce,
                            siteSearch, searchKeywordParameters ,
                            searchCategoryParameters , excludedIps ,
                            excludedQueryParameters , timezone,
-                           currency , group, startDate, excludedUserAgents,keepURLFragments ) as t -> methodCmdImpl t + makeParams2 [|("siteName",siteName);("urls",urls)|]
+                           currency , group, startDate, excludedUserAgents,keepURLFragments ) as t -> methodCmdImpl t + makeParams2 [|("siteName",siteName);("urls",url)|]
                                                                                                                           +  (if (ecommerce.IsSome) then makeParam("ecommerce",ecommerce.Value) else "" )
                                                                                                                           +  (if (siteSearch.IsSome) then makeParam("siteSearch",siteSearch.Value) else "" )
                                                                                                                           +  (if (searchKeywordParameters.IsSome) then makeParam("searchKeywordParameters",searchKeywordParameters.Value) else "" )
@@ -694,7 +697,26 @@ and SitesManagerMethod =
                                                                                                                           +  (if (startDate.IsSome) then makeParam("startDate",startDate.Value) else "" )
                                                                                                                           +  (if (excludedUserAgents.IsSome) then makeParam("excludedUserAgents",excludedUserAgents.Value) else "" )
                                                                                                                           +  (if (keepURLFragments.IsSome) then makeParam("keepURLFragments",keepURLFragments.Value) else makeParam("keepURLFragments",0) )
-                | AddSiteAliasUrls(sid, urls)  as t -> methodCmdImpl t  + (sid:>ApiParameter).Command + makeParam("urls",urls)
+                | AddSite2(siteName, urls, ecommerce,
+                           siteSearch, searchKeywordParameters ,
+                           searchCategoryParameters , excludedIps ,
+                           excludedQueryParameters , timezone,
+                           currency , group, startDate, excludedUserAgents,keepURLFragments ) as t -> methodCmdImpl t + makeParam("siteName",siteName) + makeParam3("urls",urls)
+                                                                                                                          +  (if (ecommerce.IsSome) then makeParam("ecommerce",ecommerce.Value) else "" )
+                                                                                                                          +  (if (siteSearch.IsSome) then makeParam("siteSearch",siteSearch.Value) else "" )
+                                                                                                                          +  (if (searchKeywordParameters.IsSome) then makeParam("searchKeywordParameters",searchKeywordParameters.Value) else "" )
+                                                                                                                          +  (if (searchCategoryParameters.IsSome) then makeParam("searchCategoryParameters",searchCategoryParameters.Value) else "" )
+                                                                                                                          +  (if (excludedIps.IsSome) then makeParam("excludedIps",excludedIps.Value) else "" )
+                                                                                                                          +  (if (excludedQueryParameters.IsSome) then makeParam("excludedQueryParameters",excludedQueryParameters.Value) else "" )
+                                                                                                                          +  (if (timezone.IsSome) then makeParam("timezone",timezone.Value) else "" )
+                                                                                                                          +  (if (currency.IsSome) then makeParam("currency",currency.Value) else "" )
+                                                                                                                          +  (if (group.IsSome) then makeParam("group",group.Value) else "" )
+                                                                                                                          +  (if (startDate.IsSome) then makeParam("startDate",startDate.Value) else "" )
+                                                                                                                          +  (if (excludedUserAgents.IsSome) then makeParam("excludedUserAgents",excludedUserAgents.Value) else "" )
+                                                                                                                          +  (if (keepURLFragments.IsSome) then makeParam("keepURLFragments",keepURLFragments.Value) else makeParam("keepURLFragments",0) )
+
+                | AddSiteAliasUrls(sid, url)  as t -> methodCmdImpl t  + (sid:>ApiParameter).Command + makeParam("urls",url)
+                | AddSiteAliasUrls2(sid, urls)  as t -> methodCmdImpl t  + (sid:>ApiParameter).Command + makeParam3("urls",urls)
                 | GetIpsForRange (ipRange) as t -> methodCmdImpl t + makeParam("ipRange",ipRange)
                 | SetGlobalExcludedIps (excludedIps)  as t -> methodCmdImpl t + makeParam("excludedIps",excludedIps)
                 | SetGlobalSearchParameters (searchKeywordParameters, searchCategoryParameters) as t -> methodCmdImpl t + makeParams2 [|("searchKeywordParameters",searchKeywordParameters);("searchCategoryParameters",searchCategoryParameters)|]
@@ -703,12 +725,12 @@ and SitesManagerMethod =
                 | SetGlobalExcludedQueryParameters (excludedQueryParameters)  as t -> methodCmdImpl t + makeParam("excludedQueryParameters",excludedQueryParameters)
                 | SetDefaultCurrency (defaultCurrency)  as t -> methodCmdImpl t + makeParam("defaultCurrency",defaultCurrency)
                 | GetPatternMatchSites (pattern)  as t -> methodCmdImpl t + makeParam("pattern",pattern)
-                | UpdateSite(sid, siteName, urls, ecommerce ,
+                | UpdateSite(sid, siteName, url, ecommerce ,
                                  siteSearch, searchKeywordParameters,
                                   searchCategoryParameters, excludedIps,
                                   excludedQueryParameters, timezone , 
                                   currency , group , startDate , excludedUserAgents,keepURLFragments)  as t -> methodCmdImpl t + (sid:>ApiParameter).Command + makeParam("siteName",siteName)
-                                                                                                                                  +  (if (urls.IsSome) then makeParam("urls",urls.Value) else "" )
+                                                                                                                                  +  (if (url.IsSome) then makeParam("urls",url.Value) else "" )
                                                                                                                                   +  (if (ecommerce.IsSome) then makeParam("ecommerce",ecommerce.Value) else "" )
                                                                                                                                   +  (if (siteSearch.IsSome) then makeParam("siteSearch",siteSearch.Value) else "" )
                                                                                                                                   +  (if (searchKeywordParameters.IsSome) then makeParam("searchKeywordParameters",searchKeywordParameters.Value) else "" )
@@ -721,6 +743,25 @@ and SitesManagerMethod =
                                                                                                                                   +  (if (startDate.IsSome) then makeParam("startDate",startDate.Value) else "" )
                                                                                                                                   +  (if (excludedUserAgents.IsSome) then makeParam("excludedUserAgents",excludedUserAgents.Value) else "" )
                                                                                                                                   +  (if (keepURLFragments.IsSome) then makeParam("keepURLFragments",keepURLFragments.Value) else makeParam("keepURLFragments",0) )
+                | UpdateSite2(sid, siteName, urls, ecommerce ,
+                                 siteSearch, searchKeywordParameters,
+                                  searchCategoryParameters, excludedIps,
+                                  excludedQueryParameters, timezone , 
+                                  currency , group , startDate , excludedUserAgents,keepURLFragments)  as t -> methodCmdImpl t + (sid:>ApiParameter).Command + makeParam("siteName",siteName)
+                                                                                                                                  +  (if (urls.IsSome) then makeParam3("urls",urls.Value) else "" )
+                                                                                                                                  +  (if (ecommerce.IsSome) then makeParam("ecommerce",ecommerce.Value) else "" )
+                                                                                                                                  +  (if (siteSearch.IsSome) then makeParam("siteSearch",siteSearch.Value) else "" )
+                                                                                                                                  +  (if (searchKeywordParameters.IsSome) then makeParam("searchKeywordParameters",searchKeywordParameters.Value) else "" )
+                                                                                                                                  +  (if (searchCategoryParameters.IsSome) then makeParam("searchCategoryParameters",searchCategoryParameters.Value) else "" )
+                                                                                                                                  +  (if (excludedIps.IsSome) then makeParam("excludedIps",excludedIps.Value) else "" )
+                                                                                                                                  +  (if (excludedQueryParameters.IsSome) then makeParam("excludedQueryParameters",excludedQueryParameters.Value) else "" )
+                                                                                                                                  +  (if (timezone.IsSome) then makeParam("timezone",timezone.Value) else "" )
+                                                                                                                                  +  (if (currency.IsSome) then makeParam("currency",currency.Value) else "" )
+                                                                                                                                  +  (if (group.IsSome) then makeParam("group",group.Value) else "" )
+                                                                                                                                  +  (if (startDate.IsSome) then makeParam("startDate",startDate.Value) else "" )
+                                                                                                                                  +  (if (excludedUserAgents.IsSome) then makeParam("excludedUserAgents",excludedUserAgents.Value) else "" )
+                                                                                                                                  +  (if (keepURLFragments.IsSome) then makeParam("keepURLFragments",keepURLFragments.Value) else makeParam("keepURLFragments",0) )
+
                 | _ as t -> methodCmdImpl t 
 
 and AnnotationsMethod =
