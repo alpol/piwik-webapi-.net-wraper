@@ -11,6 +11,15 @@ let start (uri:string) =
     else
         String.Format(@"{0}/?module=API", uri)
 
+let startTracking (uri:string) =
+    if uri.Contains("?module=API") then raise(ParameterDuplicationException("module", "API"))
+    if uri.Contains("?rec=1") then raise(ParameterDuplicationException("rec", "1")) 
+    if(uri.EndsWith(@"/")) then
+        String.Format(@"{0}?rec=1&apiv=1&rand={1}", uri, DateTime.Now.ToString("YYYYMMddHHmmssFFF"))
+    else
+        String.Format(@"{0}/?rec=1&apiv=1&rand={1}", uri, DateTime.Now.ToString("YYYYMMddHHmmssFFF"))
+    
+
 let addAuth (token:string) (uri:string) = uri |> addParam (AuthToken token) 
 
 let addLanguage (language:string) (uri:string) = uri |> addParam (Language language)

@@ -10,13 +10,22 @@ let private makeParam3 (n, v) = snd( v |> Seq.fold( fun s e -> ( fst(s) + 1 , sn
 let private makeParams2 p = p |> Seq.fold(fun s e -> s + (makeParam e))""
 let private methodCmdImpl t = (fst( Reflection.FSharpValue.GetUnionFields(t,t.GetType()))).Name |> fun s -> s.Substring(0,1).ToLower() + s.Substring(1)
 let private methodTypeCmdImpl o m s = String.Format("&{0}={1}", (o :> ApiParameter).Name, s + "." + (m :> ApiMethod).Command ) 
+let private urlEncode (s:string) =  System.Web.HttpUtility.UrlPathEncode(s)
+let private urlEncodeUri (s:string) =
+    let pathAndQuery = s.Split([|'?'|])
+    if pathAndQuery.Length = 2 then
+        System.Web.HttpUtility.UrlPathEncode(pathAndQuery.[0]) + "?" + System.Web.HttpUtility.UrlPathEncode(pathAndQuery.[1])
+    else
+        System.Web.HttpUtility.UrlPathEncode(pathAndQuery.[0])
+
+let private jsonEncodeCustomVars (cparams:seq<(int*(string*string))>) = "{" + (cparams |> Seq.fold( fun s e -> s + String.Format(",\"{0}\":[\"{1}\",\"{2}\"]",fst(e), fst(snd(e)),snd(snd(e))))"").Substring(1) + "}"
 let private getUNIXTimeStamp (dt:DateTime) = (dt.ToUniversalTime() - DateTime(1970,1,1,0,0,0,0,DateTimeKind.Utc)).TotalSeconds
 let private fromStringOrSeq (name ,args:obj) =
     match args with
      | :? string as s -> makeParam(name,s)
      | :? seq<string> as ss -> makeParam3(name, ss)
      | _ ->  failwith "Invalid argument type for " + name
-let private buildUrls (urls:seq<string>) = snd( urls |> Seq.fold( fun s e -> ( fst(s) + 1 , snd(s) + String.Format(@"&{0}[{2}]={1}",  "urls", System.Web.HttpUtility.UrlEncode(e), fst(s) + 1 )))(-1,""))
+let private buildUrls (urls:seq<string>) = snd( urls |> Seq.fold( fun s e -> ( fst(s) + 1 , snd(s) + String.Format(@"&{0}[{2}]={1}",  "urls", urlEncode(e), fst(s) + 1 )))(-1,""))
 
 let private makeLogins logins =
     match logins with
@@ -50,6 +59,7 @@ type MethodType =
     |Transitions of TransitionsMethod
     |SEO of SEOMethod
     |UsersManager of UsersManagerMethod
+    |TrackAPI of TrackMethod
     interface ApiParameter with
         member this.Command =
             match this with
@@ -78,7 +88,73 @@ type MethodType =
             | Transitions(n) -> methodTypeCmdImpl this n (fst( Reflection.FSharpValue.GetUnionFields(this,this.GetType()))).Name
             | SEO(n) -> methodTypeCmdImpl this n (fst( Reflection.FSharpValue.GetUnionFields(this,this.GetType()))).Name
             | UsersManager(n) -> methodTypeCmdImpl this n (fst( Reflection.FSharpValue.GetUnionFields(this,this.GetType()))).Name
+            | TrackAPI(n) -> (n :> ApiMethod).Command  
         member this.Name = "method"
+and TrackMethod =
+    | Track of int * string * string * string * string option * seq<(int*(string*string))> option * int option * DateTime option
+         * DateTime option * string option * string option * string option * DateTime option * string option * string option
+         * seq<(int*(string*string))> option * string option * string Option * (string * (string option * string option)) option
+         * (int * int option) option * int option
+    | TrackWithAdmin of string * string option * DateTime option * string option * bool option
+                            * string option * string option * string option * (decimal * decimal) option * bool option
+    interface ApiMethod with
+        member this.Command =
+                match this with
+                | Track(siteId, pageUrl, actionName, userId,
+                         urlReferrer, customVarsVisit,
+                          visitorCurrentVisitsCount,
+                          previousVisitDateTime,
+                          firstVisitDateTime,
+                          compaignName,
+                          compaignKeyword,
+                          deviceResolution,
+                          curentTime,
+                          userAgent,
+                          lang,
+                          customVarsPage,
+                          externalUrl,
+                          downloadUrl,
+                          searchKeyword,
+                          idgoalAndRevenu,
+                          averageGenerationTime)  -> makeParams2 [|("idsite",siteId.ToString());("url",urlEncodeUri(pageUrl));("action_name",actionName);("_id",userId)|]
+                                                                    + (if (urlReferrer.IsSome) then makeParam("urlref", urlEncodeUri(urlReferrer.Value)) else "")
+                                                                    + (if (customVarsVisit.IsSome) then makeParam("_cvar", jsonEncodeCustomVars(customVarsVisit.Value)) else "")
+                                                                    + (if (visitorCurrentVisitsCount.IsSome) then makeParam("_idvc", visitorCurrentVisitsCount.Value) else "")
+                                                                    + (if (previousVisitDateTime.IsSome) then makeParam("_viewts", getUNIXTimeStamp previousVisitDateTime.Value) else "") 
+                                                                    + (if (firstVisitDateTime.IsSome) then makeParam("_idts", getUNIXTimeStamp firstVisitDateTime.Value) else "") 
+                                                                    + (if (compaignName.IsSome) then makeParam("_rcn", urlEncode(compaignName.Value)) else "")
+                                                                    + (if (compaignKeyword.IsSome) then makeParam("_rck", urlEncode(compaignKeyword.Value)) else "")
+                                                                    + (if (deviceResolution.IsSome) then makeParam("res", urlEncode(deviceResolution.Value)) else "")
+                                                                    + (if (curentTime.IsSome) then makeParams2([|("h", curentTime.Value.Hour);("m", curentTime.Value.Minute);("s", curentTime.Value.Second)|]) else "")
+                                                                    + (if (userAgent.IsSome) then makeParam("ua", urlEncode(userAgent.Value)) else "")
+                                                                    + (if (lang.IsSome) then makeParam("lang", urlEncode(lang.Value)) else "")
+                                                                    + (if (customVarsPage.IsSome) then makeParam("cvar", jsonEncodeCustomVars(customVarsPage.Value)) else "")
+                                                                    + (if (externalUrl.IsSome) then makeParam("link", urlEncode(externalUrl.Value)) else "")
+                                                                    + (if (downloadUrl.IsSome) then makeParam("download", urlEncode(downloadUrl.Value)) else "")
+                                                                    + (if (searchKeyword.IsSome) then makeParam("search", urlEncode(fst(searchKeyword.Value))) + (if(Option.isSome( fst(snd(searchKeyword.Value)))) then makeParam("search_cat", Option.get(fst(snd(searchKeyword.Value)))) else "") + (if(Option.isSome( snd(snd(searchKeyword.Value)))) then makeParam("search_count", Option.get(snd(snd(searchKeyword.Value)))) else "")  else "")
+                                                                    + (if (idgoalAndRevenu.IsSome) then makeParam("idgoal", fst(idgoalAndRevenu.Value)) + (if (Option.isSome(snd(idgoalAndRevenu.Value))) then makeParam("revenue", Option.get(snd(idgoalAndRevenu.Value))) else "") else "")
+                                                                    + (if (averageGenerationTime.IsSome) then makeParam("link", averageGenerationTime.Value) else "")
+                | TrackWithAdmin(adminToken, ip,
+                                 dateTimeOfVisit,
+                                 visitorId,
+                                 isNewVisit,
+                                 countryCode,
+                                 regionCode,
+                                 city,
+                                 latLong,
+                                 isBot) -> makeParam("token_auth",adminToken)
+                                                     + (if (ip.IsSome) then makeParam("cip", ip.Value) else "")
+                                                     + (if (dateTimeOfVisit.IsSome) then makeParam("cdt", urlEncode(dateTimeOfVisit.Value.ToString("yyyy-MM-dd hh:mm:ss"))) else "")
+                                                     + (if (visitorId.IsSome) then makeParam("cid", visitorId.Value) else "")
+                                                     + (if (isNewVisit.IsSome) then makeParam("new_visit", 1) else "")
+                                                     + (if (countryCode.IsSome) then makeParam("country", countryCode.Value) else "")
+                                                     + (if (regionCode.IsSome) then makeParam("region", regionCode.Value) else "")
+                                                     + (if (city.IsSome) then makeParam("city", city.Value) else "")
+                                                     + (if (latLong.IsSome) then makeParams2([|("lat", fst(latLong.Value));("long",snd(latLong.Value))|]) else "")
+                                                     + (if (isBot.IsSome) then makeParam("bots", 1) else "")
+                                                    
+                                                
+
 and UsersManagerMethod =
     | SetUserPreference of string * string * string
     | GetUserPreference of string * string

@@ -67,6 +67,7 @@
     <Compile Include="PiwikCallBuilderAddPeriodTests.fs" />
     <Compile Include="TimeSlisceTests.fs" />
     <Compile Include="AddMethodTests.fs" />
+    <Compile Include="TrackApiTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Piwik\Piwik.fsproj">
